@@ -10,6 +10,7 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 
 public class TurretIOTalonFX implements TurretIO {
@@ -18,7 +19,7 @@ public class TurretIOTalonFX implements TurretIO {
 
   private final StatusSignal<Current> supplyCurrent = turretMotor.getSupplyCurrent();
   private final StatusSignal<Angle> positionRot = turretMotor.getPosition();
-  private final StatusSignal<Angle> velocityRotPerSec = turretMotor.getPosition();
+  private final StatusSignal<AngularVelocity> velocityRotPerSec = turretMotor.getVelocity();
 
   public TurretIOTalonFX() {
     var motorConfig = new TalonFXConfiguration();
