@@ -26,6 +26,8 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
+import frc.robot.subsystems.spindexer.Spindexer;
+import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.vision.Vision;
@@ -45,6 +47,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Turret turret;
   private final Shooter shooter;
+  private final Spindexer spindexer;
 
   // vision systemns
   private final Vision vision;
@@ -122,6 +125,7 @@ public class RobotContainer {
     // subsystems
     turret = new Turret(new TurretIOTalonFX());
     shooter = new Shooter(new ShooterIOTalonFX());
+    spindexer = new Spindexer(new SpindexerIOTalonFX());
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());

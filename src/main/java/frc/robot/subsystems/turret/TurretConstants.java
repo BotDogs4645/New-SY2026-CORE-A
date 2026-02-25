@@ -1,12 +1,22 @@
 package frc.robot.subsystems.turret;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import com.ctre.phoenix6.CANBus;
 
 public final class TurretConstants {
 
   public static final int motorCanId = 6;
-  public static final String motorCanBus = "canivore";
+  public static final CANBus motorCanBus = new CANBus("canivore");
 
-  public static final Pose2d HUB_POSE2D = new Pose2d(0, 0, Rotation2d.fromRotations(0));
+  public static final double motionMagicCruiseVelocity = 0.0;
+  public static final double motionMagicAcceleration = 0.0;
+  public static final double motionMagicJerk = 0.0;
+
+  // in radians:
+  public static final double encoderStartingPosition = 0.0;
+  // in radians:
+  public static final double physicalStartingPosition = -(Math.PI / 2);
+  public static final double reverseLimit = 0.0;
+  public static final double forwardLimit = 0.5;
+
+  public static final double gearRatio = 16;
 }

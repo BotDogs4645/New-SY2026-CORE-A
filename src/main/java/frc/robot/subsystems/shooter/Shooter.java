@@ -4,22 +4,23 @@
 
 package frc.robot.subsystems.shooter;
 
-import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.NeutralOut;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.shooter.ShooterIO.ShooterIOOutputs;
+import frc.robot.subsystems.shooter.ShooterIO.ShooterOutputMode;
+import frc.robot.util.FullSubsystem;
 import org.littletonrobotics.junction.Logger;
 
-public class Shooter extends SubsystemBase {
+public class Shooter extends FullSubsystem {
 
   private ShooterIO io;
   private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
-  private final DutyCycleOut shooterActiveDutyCycle =
-      new DutyCycleOut(ShooterConstants.shooterActiveVoltageProportion);
-  private final DutyCycleOut kickerActiveDutyCycle =
-      new DutyCycleOut(ShooterConstants.kickerActiveVoltageProportion);
+  private final ShooterIOOutputs outputs = new ShooterIOOutputs();
 
-  private final NeutralOut neutralControl = new NeutralOut();
+  private double goalSpeedRadPerSec = 0.0;
+  private boolean atGoalSpeed = false;
+  private int prevShotCounter = 0;
+  private int shotCounter = 0;
 
   /** Creates a new Shooter. */
   public Shooter(ShooterIO io) {
@@ -32,14 +33,50 @@ public class Shooter extends SubsystemBase {
     Logger.processInputs("Shooter", inputs);
   }
 
-  public Command runShooter() {
-    return runEnd(
+  @Override
+  public void periodicAfterScheduler() {
+    if (goalSpeedRadPerSec == 0.0) {
+      outputs.mode = ShooterOutputMode.COAST;
+      outputs.goalSpeedRadPerSec = 0.0;
+      atGoalSpeed = false;
+    } else {
+      outputs.mode = ShooterOutputMode.CLOSED_LOOP;
+      outputs.goalSpeedRadPerSec = goalSpeedRadPerSec;
+
+      double error = goalSpeedRadPerSec - inputs.shooterVelocityRadPerSec;
+
+      if (atGoalSpeed) {
+        // we were at speed, did we drop velocity suddenly?
+        if (error > 10) {
+          shotCounter++;
+          atGoalSpeed = false;
+        }
+      } else {
+        // we are recovering or spinning up
+        if (Math.abs(error) < 10) {
+          atGoalSpeed = true;
+        }
+      }
+    }
+  }
+
+  public void setGoalSpeedRadPerSec(double speedRadPerSec) {
+    goalSpeedRadPerSec = speedRadPerSec;
+  }
+
+  public Trigger shotDetectedTrigger() {
+    return new Trigger(
         () -> {
-          io.setShooterControl(shooterActiveDutyCycle);
-          io.setKickerControl(kickerActiveDutyCycle);
-        },
+          boolean fired = shotCounter > prevShotCounter;
+          prevShotCounter = shotCounter;
+          return fired;
+        });
+  }
+
+  public Command stopShooter() {
+    return runOnce(
         () -> {
-          io.setAllControls(neutralControl);
+          setGoalSpeedRadPerSec(0.0);
         });
   }
 }
