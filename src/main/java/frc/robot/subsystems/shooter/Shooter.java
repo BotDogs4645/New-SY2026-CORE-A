@@ -58,6 +58,8 @@ public class Shooter extends FullSubsystem {
         }
       }
     }
+
+    io.applyOutputs(outputs);
   }
 
   public void setGoalSpeedRadPerSec(double speedRadPerSec) {
