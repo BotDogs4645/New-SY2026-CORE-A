@@ -6,6 +6,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.ControlRequest;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -23,6 +24,9 @@ public class ShooterIOTalonFX implements ShooterIO {
     var shooterConfig = new TalonFXConfiguration();
     // shooter config here
     tryUntilOk(5, () -> shooterMotor.getConfigurator().apply(shooterConfig, 0.25));
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        50.0, shooterSupplyCurrent, shooterVelocityRotPerSec, shooterVoltage);
+    ParentDevice.optimizeBusUtilizationForAll(shooterMotor);
   }
 
   @Override
