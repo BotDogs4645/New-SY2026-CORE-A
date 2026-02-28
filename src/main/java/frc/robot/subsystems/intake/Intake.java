@@ -8,14 +8,14 @@ import org.littletonrobotics.junction.Logger;
 
 public class Intake extends FullSubsystem {
 
-  private IntakeIO io;
+  private final IntakeIO io;
   private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
   private final IntakeIOOutputs outputs = new IntakeIOOutputs();
 
   // Goals
   private double rollerGoalRadPerSec = 0.0;
-
-  // State helpers
+  private double armGoalRadPosition = 0.0;
+  // State helpers but its lowkenuinely dead code rn
   private boolean rollerAtGoal = false;
 
   /** Creates a new Intake. */
@@ -32,12 +32,15 @@ public class Intake extends FullSubsystem {
   @Override
   public void periodicAfterScheduler() {
     if (rollerGoalRadPerSec == 0.0) {
-      outputs.mode = IntakeOutputMode.COAST;
+      outputs.rollerMode = IntakeOutputMode.COAST;
       outputs.goalSpeedRadPerSec = 0.0;
     } else {
-      outputs.mode = IntakeOutputMode.CLOSED_LOOP;
+      outputs.rollerMode = IntakeOutputMode.CLOSED_LOOP;
       outputs.goalSpeedRadPerSec = rollerGoalRadPerSec;
     }
+
+    outputs.armMode = IntakeOutputMode.POSITION;
+    outputs.armGoalRadPosition = armGoalRadPosition;
     io.applyOutputs(outputs);
   }
 
@@ -45,10 +48,18 @@ public class Intake extends FullSubsystem {
     rollerGoalRadPerSec = speedRadPerSec;
   }
 
+  public void setArmGoalRadPosition(double armRadPosition) {
+    armGoalRadPosition = armRadPosition;
+  }
+
   public Command rollersInHeld() {
     return startEnd(
         () -> setRollerSpeedRadPerSec(IntakeConstants.kRollerInRadPerSec),
         () -> setRollerSpeedRadPerSec(0.0));
+  }
+
+  public Command armDown() {
+    return runOnce(() -> setArmGoalRadPosition(IntakeConstants.kArmDownRad));
   }
 
   public Command stopIntake() {

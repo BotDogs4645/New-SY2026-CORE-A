@@ -24,6 +24,8 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import frc.robot.subsystems.spindexer.Spindexer;
@@ -48,6 +50,7 @@ public class RobotContainer {
   private final Turret turret;
   private final Shooter shooter;
   private final Spindexer spindexer;
+  private final Intake intake;
 
   // vision systemns
   private final Vision vision;
@@ -126,6 +129,7 @@ public class RobotContainer {
     turret = new Turret(new TurretIOTalonFX());
     shooter = new Shooter(new ShooterIOTalonFX());
     spindexer = new Spindexer(new SpindexerIOTalonFX());
+    intake = new Intake(new IntakeIOTalonFX());
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());

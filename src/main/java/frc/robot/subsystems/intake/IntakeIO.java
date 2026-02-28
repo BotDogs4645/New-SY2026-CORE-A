@@ -9,6 +9,10 @@ public interface IntakeIO {
     public double rollerVelocityRadPerSec = 0.0;
     public double rollerSupplyCurrent = 0.0;
     public double rollerAppliedVoltage = 0.0;
+    public double armAngleRad = 0.0;
+    public double armVelocityRadPerSec = 0.0;
+    public double armSupplyCurrent = 0.0;
+    public double armAppliedVoltage = 0.0;
   }
 
   public default void updateInputs(IntakeIOInputs inputs) {}
@@ -20,11 +24,16 @@ public interface IntakeIO {
   enum IntakeOutputMode {
     BRAKE,
     COAST,
-    CLOSED_LOOP
+    CLOSED_LOOP,
+    POSITION
   }
 
   class IntakeIOOutputs {
-    public IntakeOutputMode mode = IntakeOutputMode.COAST;
+    public IntakeOutputMode rollerMode = IntakeOutputMode.COAST;
     public double goalSpeedRadPerSec = 0.0;
+
+    // Arm
+    public IntakeOutputMode armMode = IntakeOutputMode.BRAKE;
+    public double armGoalRadPosition = 0.0;
   }
 }

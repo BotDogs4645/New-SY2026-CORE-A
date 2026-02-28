@@ -13,9 +13,6 @@ public final class IntakeConstants {
   public static final double rollerActiveVoltageProportion = 0.1;
   public static final double armActiveVoltageProportion = 0.1;
 
-  // not yet implemented (amps)
-  public static final double rollerSupplyCurrentLimit = 1000;
-  public static final double armSupplyCurrentLimit = 1000;
-
   public static final double kRollerInRadPerSec = 67.67;
+  public static final double kArmDownRad = 67;
 }
