@@ -24,16 +24,10 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
-import frc.robot.subsystems.spindexer.Spindexer;
-import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
-import frc.robot.subsystems.turret.Turret;
-import frc.robot.subsystems.turret.TurretIOTalonFX;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionConstants;
-import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.subsystems.vision.VisionIOQuestNav;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -45,14 +39,15 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final Turret turret;
+  //   private final Turret turret;
   private final Shooter shooter;
-  private final Spindexer spindexer;
+  private final Hood hood;
+  //   private final Spindexer spindexer;
 
   // vision systemns
-  private final Vision vision;
-  private final VisionIOQuestNav questNavIO;
-  private final VisionIOLimelight limelightIO;
+  //   private final Vision vision;
+  //   private final VisionIOQuestNav questNavIO;
+  //   private final VisionIOLimelight limelightIO;
 
   // Controller
   private final CommandXboxController driveController = new CommandXboxController(0);
@@ -118,14 +113,15 @@ public class RobotContainer {
     }
 
     // vision instantiation
-    questNavIO = new VisionIOQuestNav();
-    limelightIO = new VisionIOLimelight(VisionConstants.limelightName, drive::getRotation);
-    vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
+    // questNavIO = new VisionIOQuestNav();
+    // limelightIO = new VisionIOLimelight(VisionConstants.limelightName, drive::getRotation);
+    // vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
 
     // subsystems
-    turret = new Turret(new TurretIOTalonFX());
+    // turret = new Turret(new TurretIOTalonFX());
     shooter = new Shooter(new ShooterIOTalonFX());
-    spindexer = new Spindexer(new SpindexerIOTalonFX());
+    hood = new Hood(new HoodIOTalonFX());
+    // spindexer = new Spindexer(new SpindexerIOTalonFX());
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -187,7 +183,9 @@ public class RobotContainer {
                 .ignoringDisable(true));
 
     // left bumper follows hub
-    driveController.leftBumper().whileTrue(turret.followHub(drive::getPose));
+    driveController.leftBumper().whileTrue(shooter.runShooter());
+    driveController.rightBumper().onTrue(hood.raiseHood());
+    driveController.rightTrigger().onTrue(hood.lowerHood());
   }
 
   /**
