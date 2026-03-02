@@ -11,6 +11,7 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -76,10 +77,12 @@ public class IntakeIOTalonFX implements IntakeIO {
 
   public IntakeIOTalonFX() {
     var intakeConfig = new TalonFXConfiguration();
+    intakeConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     // intake config here
     tryUntilOk(5, () -> rollerMotor.getConfigurator().apply(intakeConfig, 0.25));
 
     var armConfig = new TalonFXConfiguration();
+    armConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     armConfig.Slot0.kP = 20.0;
     tryUntilOk(5, () -> armMotor.getConfigurator().apply(armConfig, 0.25));
 
