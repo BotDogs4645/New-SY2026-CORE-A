@@ -11,6 +11,7 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.util.Units;
@@ -38,6 +39,7 @@ public class SpindexerIOTalonFX implements SpindexerIO {
         SpindexerConstants.motionMagicCruiseVelocity;
     motorConfig.MotionMagic.MotionMagicAcceleration = SpindexerConstants.motionMagicAcceleration;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.Inverted = SpindexerConstants.isInverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
 
     tryUntilOk(5, () -> spindexerMotor.getConfigurator().apply(motorConfig, 0.25));
 

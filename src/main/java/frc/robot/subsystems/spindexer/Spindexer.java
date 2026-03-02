@@ -5,6 +5,8 @@
 package frc.robot.subsystems.spindexer;
 
 import com.ctre.phoenix6.controls.NeutralOut;
+
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.spindexer.SpindexerIO.SpindexerIOOutputs;
 import frc.robot.subsystems.spindexer.SpindexerIO.SpindexerOutputMode;
@@ -15,7 +17,6 @@ import org.littletonrobotics.junction.Logger;
 public class Spindexer extends FullSubsystem {
 
   private SpindexerIO io;
-  private NeutralOut neutralControlRequest = new NeutralOut();
   private final SpindexerIOInputsAutoLogged inputs = new SpindexerIOInputsAutoLogged();
 
   private SpindexerIOOutputs outputs = new SpindexerIOOutputs();
@@ -32,17 +33,28 @@ public class Spindexer extends FullSubsystem {
     Logger.processInputs("Spindexer", inputs);
   }
 
+  public void setTargetSpeed(double speed) {
+    targetSpeed = speed;
+  }
 
   @Override
   public void periodicAfterScheduler() {
-    if(targetSpeed == 0) {
+    if (targetSpeed == 0) {
       outputs.mode = SpindexerOutputMode.BRAKE;
       outputs.speed = 0;
-    }
-    else {
+    } else {
       outputs.mode = SpindexerOutputMode.DUTY_CYCLE;
       outputs.speed = targetSpeed;
     }
     io.applyOutputs(outputs);
   }
+
+  public Command runSpindexer() {
+    return runEnd(() -> {
+      setTargetSpeed(SpindexerConstants.activeSpeed);
+    }, () -> {
+      setTargetSpeed(0);
+    });
+  }
+
 }
