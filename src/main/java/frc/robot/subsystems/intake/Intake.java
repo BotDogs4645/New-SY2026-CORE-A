@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.subsystems.intake.IntakeIO.IntakeOutputMode;
 import frc.robot.util.FullSubsystem;
@@ -52,6 +53,10 @@ public class Intake extends FullSubsystem {
     armGoalRadPosition = armRadPosition;
   }
 
+  public boolean armAtGoal() {
+    return Math.abs(inputs.armAngleRad - armGoalRadPosition) < 0.05;
+  }
+
   public Command rollersInHeld() {
     return startEnd(
         () -> setRollerSpeedRadPerSec(IntakeConstants.kRollerInRadPerSec),
@@ -59,7 +64,11 @@ public class Intake extends FullSubsystem {
   }
 
   public Command armDown() {
-    return runOnce(() -> setArmGoalRadPosition(IntakeConstants.kArmDownRad));
+    return Commands.sequence(
+        Commands.runOnce(() -> setArmGoalRadPosition(IntakeConstants.kArmDownRadHalf), this),
+        Commands.waitUntil(this::armAtGoal),
+        Commands.runOnce(() -> setRollerSpeedRadPerSec(1), this),
+        Commands.runOnce(() -> setArmGoalRadPosition(IntakeConstants.kArmDownRad), this));
   }
 
   public Command stopIntake() {

@@ -14,5 +14,7 @@ public final class IntakeConstants {
   public static final double armActiveVoltageProportion = 0.1;
 
   public static final double kRollerInRadPerSec = 67.67;
-  public static final double kArmDownRad = 67;
+  public static final double kArmUpRad = 0.82;
+  public static final double kArmDownRad = 0.124512;
+  public static final double kArmDownRadHalf = 0.75;
 }

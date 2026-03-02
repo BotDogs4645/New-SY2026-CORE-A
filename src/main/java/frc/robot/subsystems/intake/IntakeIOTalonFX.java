@@ -6,8 +6,8 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.ControlRequest;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -30,7 +30,7 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<Voltage> rollerVoltage = rollerMotor.getMotorVoltage();
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
   private final NeutralOut neutralOut = new NeutralOut();
-  private final PositionVoltage armPositionRequest = new PositionVoltage(0.0);
+  private final MotionMagicVoltage armRequest = new MotionMagicVoltage(0.0);
   private final StatusSignal<Current> armSupplyCurrent = armMotor.getSupplyCurrent();
   private final StatusSignal<AngularVelocity> armVelocityRotPerSec = armMotor.getVelocity();
   private final StatusSignal<Voltage> armVoltage = armMotor.getMotorVoltage();
@@ -59,7 +59,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     switch (outputs.armMode) {
       case POSITION -> {
         double rotations = Units.radiansToRotations(outputs.armGoalRadPosition);
-        armMotor.setControl(armPositionRequest.withPosition(rotations));
+        armMotor.setControl(armRequest.withPosition(rotations));
       }
       case COAST -> {
         armMotor.setNeutralMode(NeutralModeValue.Coast);
@@ -84,6 +84,13 @@ public class IntakeIOTalonFX implements IntakeIO {
     var armConfig = new TalonFXConfiguration();
     armConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     armConfig.Slot0.kP = 20.0;
+
+    armConfig.Voltage.PeakForwardVoltage = 3.0;
+    armConfig.Voltage.PeakReverseVoltage = -3.0;
+
+    // REALLY slow (units are rotations/sec and rotations/sec^2)
+    armConfig.MotionMagic.MotionMagicCruiseVelocity = 0.25; // very slow
+    armConfig.MotionMagic.MotionMagicAcceleration = 0.50; // gentle accel
     tryUntilOk(5, () -> armMotor.getConfigurator().apply(armConfig, 0.25));
 
     BaseStatusSignal.setUpdateFrequencyForAll(
