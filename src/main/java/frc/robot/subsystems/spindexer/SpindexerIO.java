@@ -11,7 +11,20 @@ public interface SpindexerIO {
     public double velocityRadPerSec = 0.0;
   }
 
+  enum SpindexerOutputMode {
+    BRAKE,
+    COAST,
+    DUTY_CYCLE
+  }
+
+  public class SpindexerIOOutputs {
+    SpindexerOutputMode mode = SpindexerOutputMode.BRAKE;
+    double speed = 0.0;
+  }
+
   public default void updateInputs(SpindexerIOInputs inputs) {}
 
   public default void setMotorControl(ControlRequest control) {}
+
+  public default void applyOutputs(SpindexerIOOutputs outputs) {}
 }
