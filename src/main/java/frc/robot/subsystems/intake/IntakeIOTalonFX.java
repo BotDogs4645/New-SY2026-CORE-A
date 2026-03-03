@@ -6,11 +6,12 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.ControlRequest;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
@@ -18,6 +19,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import org.littletonrobotics.junction.Logger;
 
 public class IntakeIOTalonFX implements IntakeIO {
   private final TalonFX rollerMotor =
@@ -28,7 +30,7 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<Current> rollerSupplyCurrent = rollerMotor.getSupplyCurrent();
   private final StatusSignal<AngularVelocity> rollerVelocityRotPerSec = rollerMotor.getVelocity();
   private final StatusSignal<Voltage> rollerVoltage = rollerMotor.getMotorVoltage();
-  private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
+  private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
   private final NeutralOut neutralOut = new NeutralOut();
   private final MotionMagicVoltage armRequest = new MotionMagicVoltage(0.0);
   private final StatusSignal<Current> armSupplyCurrent = armMotor.getSupplyCurrent();
@@ -41,16 +43,19 @@ public class IntakeIOTalonFX implements IntakeIO {
     switch (outputs.rollerMode) {
       case COAST -> {
         // make sure motor is in coast if you want it truly coasting
+        Logger.recordOutput("Intake/IOoutputMode", "COAST");
         rollerMotor.setNeutralMode(NeutralModeValue.Coast);
         rollerMotor.setControl(neutralOut);
       }
       case BRAKE -> {
+        Logger.recordOutput("Intake/IOoutputMode", "BRAKE");
         rollerMotor.setNeutralMode(NeutralModeValue.Brake);
         rollerMotor.setControl(neutralOut);
       }
-      case CLOSED_LOOP -> {
-        double rps = Units.radiansToRotations(outputs.goalSpeedRadPerSec);
-        rollerMotor.setControl(velocityRequest.withVelocity(rps));
+      case DUTY_CYCLE -> {
+        Logger.recordOutput("Intake/IOoutputMode", "DUTYCYCLE");
+        Logger.recordOutput("Intake/IOoutputSpeed", outputs.goalSpeedRadPerSec);
+        rollerMotor.setControl(dutyCycleRequest.withOutput(outputs.goalSpeedRadPerSec));
       }
       case POSITION -> {
         rollerMotor.setControl(neutralOut);
@@ -77,21 +82,25 @@ public class IntakeIOTalonFX implements IntakeIO {
 
   public IntakeIOTalonFX() {
     var intakeConfig = new TalonFXConfiguration();
-    intakeConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    intakeConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     // intake config here
     tryUntilOk(5, () -> rollerMotor.getConfigurator().apply(intakeConfig, 0.25));
 
     var armConfig = new TalonFXConfiguration();
-    armConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    armConfig.Slot0.kP = 20.0;
+    armConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    armConfig.Slot0.kP = 5.0;
+    armConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+    armConfig.Slot0.kG = 0.1;
 
     armConfig.Voltage.PeakForwardVoltage = 3.0;
     armConfig.Voltage.PeakReverseVoltage = -3.0;
 
     // REALLY slow (units are rotations/sec and rotations/sec^2)
-    armConfig.MotionMagic.MotionMagicCruiseVelocity = 0.25; // very slow
-    armConfig.MotionMagic.MotionMagicAcceleration = 0.50; // gentle accel
+    armConfig.MotionMagic.MotionMagicCruiseVelocity = 5; // very slow
+    armConfig.MotionMagic.MotionMagicAcceleration = 1; // gentle accel
     tryUntilOk(5, () -> armMotor.getConfigurator().apply(armConfig, 0.25));
+
+    armMotor.setPosition(IntakeConstants.kArmUpRad);
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0,

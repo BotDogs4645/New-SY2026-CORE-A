@@ -25,6 +25,7 @@ public interface IntakeIO {
     BRAKE,
     COAST,
     CLOSED_LOOP,
+    DUTY_CYCLE,
     POSITION
   }
 
