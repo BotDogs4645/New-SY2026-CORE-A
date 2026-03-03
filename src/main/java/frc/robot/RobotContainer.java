@@ -184,6 +184,9 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
+    driveController.x().onTrue(intake.armDown());
+    driveController.y().whileTrue(intake.rollersInHeld());
+
     // left bumper follows hub
     driveController.leftBumper().whileTrue(shooter.runShooter());
     driveController.rightBumper().onTrue(hood.raiseHood());
