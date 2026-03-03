@@ -3,11 +3,13 @@ package frc.robot.subsystems.shooter;
 import com.ctre.phoenix6.CANBus;
 
 public final class ShooterConstants {
-  public static final int shooterMotorCanId = 8;
-  public static final CANBus shooterMotorCanBus = new CANBus("canivore");
+  public static final int shooterMotorCanId = 16;
+  public static final CANBus shooterMotorCanBus = new CANBus("CANivore");
+  public static final boolean shooterMotorInverted = true;
 
-  public static final int kickerMotorCanId = 9;
-  public static final CANBus kickerMotorCanBus = new CANBus("canivore");
+  public static final int kickerMotorCanId = 15;
+  public static final CANBus kickerMotorCanBus = new CANBus("CANivore");
+  public static final boolean kickerMotorInverted = true;
 
   // for active duty cycle out, these values are the proportion of the supply voltage to apply
   public static final double shooterActiveVoltageProportion = 0.1;

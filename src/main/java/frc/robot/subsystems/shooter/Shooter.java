@@ -5,6 +5,7 @@
 package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.shooter.ShooterIO.ShooterIOOutputs;
 import frc.robot.subsystems.shooter.ShooterIO.ShooterOutputMode;
@@ -17,7 +18,8 @@ public class Shooter extends FullSubsystem {
   private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
   private final ShooterIOOutputs outputs = new ShooterIOOutputs();
 
-  private double goalSpeedRadPerSec = 0.0;
+  private double shooterGoalSpeedRadPerSec = 0.0;
+  private double kickerGoalSpeedRadPerSec = 0.0;
   private boolean atGoalSpeed = false;
   private int prevShotCounter = 0;
   private int shotCounter = 0;
@@ -35,15 +37,17 @@ public class Shooter extends FullSubsystem {
 
   @Override
   public void periodicAfterScheduler() {
-    if (goalSpeedRadPerSec == 0.0) {
-      outputs.mode = ShooterOutputMode.COAST;
-      outputs.goalSpeedRadPerSec = 0.0;
+    Logger.recordOutput("Shooter/shooterVelocityRadPerSec", shooterGoalSpeedRadPerSec);
+    Logger.recordOutput("Shooter/kickerVelocityRadPerSec", kickerGoalSpeedRadPerSec);
+    if (shooterGoalSpeedRadPerSec == 0.0) {
+      outputs.shooterMode = ShooterOutputMode.BRAKE;
+      outputs.shooterGoalSpeedRadPerSec = 0.0;
       atGoalSpeed = false;
     } else {
-      outputs.mode = ShooterOutputMode.CLOSED_LOOP;
-      outputs.goalSpeedRadPerSec = goalSpeedRadPerSec;
+      outputs.shooterMode = ShooterOutputMode.CLOSED_LOOP;
+      outputs.shooterGoalSpeedRadPerSec = shooterGoalSpeedRadPerSec;
 
-      double error = goalSpeedRadPerSec - inputs.shooterVelocityRadPerSec;
+      double error = shooterGoalSpeedRadPerSec - inputs.shooterVelocityRadPerSec;
 
       if (atGoalSpeed) {
         // we were at speed, did we drop velocity suddenly?
@@ -59,11 +63,24 @@ public class Shooter extends FullSubsystem {
       }
     }
 
+    if (kickerGoalSpeedRadPerSec == 0.0) {
+      outputs.kickerMode = ShooterOutputMode.BRAKE;
+      outputs.kickerGoalSpeedRadPerSec = 0.0;
+      atGoalSpeed = false;
+    } else {
+      outputs.kickerMode = ShooterOutputMode.CLOSED_LOOP;
+      outputs.kickerGoalSpeedRadPerSec = kickerGoalSpeedRadPerSec;
+    }
+
     io.applyOutputs(outputs);
   }
 
-  public void setGoalSpeedRadPerSec(double speedRadPerSec) {
-    goalSpeedRadPerSec = speedRadPerSec;
+  public void setShooterGoalSpeedRadPerSec(double speedRadPerSec) {
+    shooterGoalSpeedRadPerSec = speedRadPerSec;
+  }
+
+  public void setKickerGoalSpeedRadPerSec(double speedRadPerSec) {
+    kickerGoalSpeedRadPerSec = speedRadPerSec;
   }
 
   public Trigger shotDetectedTrigger() {
@@ -78,7 +95,20 @@ public class Shooter extends FullSubsystem {
   public Command stopShooter() {
     return runOnce(
         () -> {
-          setGoalSpeedRadPerSec(0.0);
+          setKickerGoalSpeedRadPerSec(0.0);
+          setShooterGoalSpeedRadPerSec(0.0);
         });
+  }
+
+  public Command runShooter() {
+    return Commands.sequence(
+        runOnce(() -> setShooterGoalSpeedRadPerSec(300)),
+        Commands.waitSeconds(0.2),
+        startEnd(
+            () -> setKickerGoalSpeedRadPerSec(300),
+            () -> {
+              setKickerGoalSpeedRadPerSec(0.0);
+              setShooterGoalSpeedRadPerSec(0.0);
+            }));
   }
 }
