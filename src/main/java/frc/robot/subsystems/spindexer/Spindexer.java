@@ -4,14 +4,10 @@
 
 package frc.robot.subsystems.spindexer;
 
-import com.ctre.phoenix6.controls.NeutralOut;
-
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.spindexer.SpindexerIO.SpindexerIOOutputs;
 import frc.robot.subsystems.spindexer.SpindexerIO.SpindexerOutputMode;
 import frc.robot.util.FullSubsystem;
-
 import org.littletonrobotics.junction.Logger;
 
 public class Spindexer extends FullSubsystem {
@@ -50,11 +46,12 @@ public class Spindexer extends FullSubsystem {
   }
 
   public Command runSpindexer() {
-    return runEnd(() -> {
-      setTargetSpeed(SpindexerConstants.activeSpeed);
-    }, () -> {
-      setTargetSpeed(0);
-    });
+    return runEnd(
+        () -> {
+          setTargetSpeed(SpindexerConstants.activeSpeed);
+        },
+        () -> {
+          setTargetSpeed(0);
+        });
   }
-
 }

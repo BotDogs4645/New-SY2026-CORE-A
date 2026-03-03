@@ -45,10 +45,12 @@ public class HoodIOTalonFX implements HoodIO {
     tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(motorConfig, 0.25));
 
     var encoderConfig = new CANcoderConfiguration();
-    encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+    encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
     tryUntilOk(5, () -> throughboreEncoder.getConfigurator().apply(encoderConfig, 0.25));
 
     throughboreEncoder.setPosition(0);
+    hoodMotor.setPosition(0);
+
 
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(hoodMotor);

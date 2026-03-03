@@ -13,12 +13,10 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.wpilibj.DutyCycle;
 
 public class SpindexerIOTalonFX implements SpindexerIO {
   private final TalonFX spindexerMotor =
@@ -39,7 +37,10 @@ public class SpindexerIOTalonFX implements SpindexerIO {
         SpindexerConstants.motionMagicCruiseVelocity;
     motorConfig.MotionMagic.MotionMagicAcceleration = SpindexerConstants.motionMagicAcceleration;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    motorConfig.MotorOutput.Inverted = SpindexerConstants.isInverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+    motorConfig.MotorOutput.Inverted =
+        SpindexerConstants.isInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
 
     tryUntilOk(5, () -> spindexerMotor.getConfigurator().apply(motorConfig, 0.25));
 
@@ -63,10 +64,9 @@ public class SpindexerIOTalonFX implements SpindexerIO {
 
   @Override
   public void applyOutputs(SpindexerIOOutputs outputs) {
-    if(outputs.mode == SpindexerOutputMode.BRAKE) {
+    if (outputs.mode == SpindexerOutputMode.BRAKE) {
       setMotorControl(brakeControl);
-    }
-    else {
+    } else {
       setMotorControl(dutyCycleControl.withOutput(outputs.speed));
     }
   }

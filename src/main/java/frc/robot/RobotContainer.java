@@ -28,6 +28,8 @@ import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
+import frc.robot.subsystems.spindexer.Spindexer;
+import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -42,7 +44,7 @@ public class RobotContainer {
   //   private final Turret turret;
   private final Shooter shooter;
   private final Hood hood;
-  //   private final Spindexer spindexer;
+  private final Spindexer spindexer;
 
   // vision systemns
   //   private final Vision vision;
@@ -121,7 +123,7 @@ public class RobotContainer {
     // turret = new Turret(new TurretIOTalonFX());
     shooter = new Shooter(new ShooterIOTalonFX());
     hood = new Hood(new HoodIOTalonFX());
-    // spindexer = new Spindexer(new SpindexerIOTalonFX());
+    spindexer = new Spindexer(new SpindexerIOTalonFX());
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -186,6 +188,7 @@ public class RobotContainer {
     driveController.leftBumper().whileTrue(shooter.runShooter());
     driveController.rightBumper().onTrue(hood.raiseHood());
     driveController.rightTrigger().onTrue(hood.lowerHood());
+    driveController.leftTrigger().whileTrue(spindexer.runSpindexer());
   }
 
   /**
