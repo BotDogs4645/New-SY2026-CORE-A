@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.intake.IntakeConstants.ArmMechanismPosition;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.subsystems.intake.IntakeIO.IntakeOutputMode;
 import frc.robot.util.FullSubsystem;
@@ -15,8 +16,8 @@ public class Intake extends FullSubsystem {
   private final IntakeIOOutputs outputs = new IntakeIOOutputs();
 
   // Goals
-  private double rollerGoalRadPerSec = 0.0;
-  private double armGoalRadPosition = 0.0;
+  private double rollerOutputLevel = 0.0;
+  private ArmMechanismPosition armGoalPosition = ArmMechanismPosition.ARM_UP;
   private IntakeOutputMode armOutputMode = IntakeOutputMode.COAST;
   // State helpers but its lowkenuinely dead code rn
   private boolean rollerAtGoal = false;
@@ -34,70 +35,77 @@ public class Intake extends FullSubsystem {
 
   @Override
   public void periodicAfterScheduler() {
-    if (rollerGoalRadPerSec == 0.0) {
+    if (rollerOutputLevel == 0.0) {
       outputs.rollerMode = IntakeOutputMode.COAST;
-      outputs.goalSpeedRadPerSec = 0.0;
+      outputs.rollerOutputLevel = 0.0;
       Logger.recordOutput("Intake/outputMode", "COAST");
     } else {
       outputs.rollerMode = IntakeOutputMode.DUTY_CYCLE;
-      outputs.goalSpeedRadPerSec = rollerGoalRadPerSec;
+      outputs.rollerOutputLevel = rollerOutputLevel;
       Logger.recordOutput("Intake/outputMode", "DUTYCYCLE");
-      Logger.recordOutput("Intake/rollerOutput", rollerGoalRadPerSec);
+      Logger.recordOutput("Intake/rollerOutput", rollerOutputLevel);
     }
     outputs.armMode = armOutputMode;
-    outputs.armGoalRadPosition = armGoalRadPosition;
+    outputs.armGoalPosition = armGoalPosition;
     io.applyOutputs(outputs);
   }
 
-  public void setRollerSpeedRadPerSec(double speedRadPerSec) {
-    rollerGoalRadPerSec = speedRadPerSec;
+  public void setRollerOutput(double outputLevel) {
+    rollerOutputLevel = outputLevel;
   }
 
-  public void setArmGoalRadPosition(double armRadPosition) {
+  public void setArmGoalPosition(ArmMechanismPosition armGoalPosition) {
     armOutputMode = IntakeOutputMode.POSITION;
-    armGoalRadPosition = armRadPosition;
+    this.armGoalPosition = armGoalPosition;
   }
 
   @AutoLogOutput
   public boolean armAtGoal() {
-    return Math.abs(inputs.armAngleRad - armGoalRadPosition) < 0.6;
+    return Math.abs(inputs.armAngleRad - armGoalPosition.motorPositionRad) < 0.6;
   }
 
-  public Command rollersInHeld() {
+  public Command RollersInHeld() {
     return startEnd(
-        () -> setRollerSpeedRadPerSec(IntakeConstants.kRollerInRadPerSec),
-        () -> setRollerSpeedRadPerSec(0.0));
+        () -> setRollerOutput(IntakeConstants.kRollerInRadPerSec),
+        () -> setRollerOutput(0.0));
   }
 
-  public Command armDown() {
+  public Command ExtendIntake() {
     return Commands.sequence(
-        Commands.runOnce(() -> setArmGoalRadPosition(IntakeConstants.kArmDownRadHalf), this),
+        runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_HALF_DOWN)),
         Commands.waitUntil(this::armAtGoal),
-        Commands.runOnce(() -> setRollerSpeedRadPerSec(0.35), this),
-        Commands.runOnce(() -> setArmGoalRadPosition(IntakeConstants.kArmDownRad), this),
+        runOnce(() -> setRollerOutput(IntakeConstants.armDownRollerOutput)),
+        runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_DOWN)),
         Commands.waitUntil(this::armAtGoal),
-        Commands.runOnce(
+        runOnce(
             () -> {
-              setRollerSpeedRadPerSec(0);
+              setRollerOutput(0);
               armOutputMode = IntakeOutputMode.COAST;
-            },
-            this));
+            }));
   }
 
-  public Command stopIntake() {
+  public Command StopIntake() {
     return runOnce(
         () -> {
-          setRollerSpeedRadPerSec(0.0);
+          setRollerOutput(0.0);
         });
   }
 
-  public Command startIntake() {
-    return runEnd(
+  public Command StartIntake() {
+    return runOnce(
         () -> {
-          setRollerSpeedRadPerSec(0.42);
-        },
-        () -> {
-          setRollerSpeedRadPerSec(0);
+          setRollerOutput(IntakeConstants.intakingRollerOutput);
         });
   }
+
+  public Command RunIntake() {
+    return runEnd(
+        () -> {
+          setRollerOutput(IntakeConstants.intakingRollerOutput);
+        },
+        () -> {
+          setRollerOutput(0);
+        });
+  }
+
 }

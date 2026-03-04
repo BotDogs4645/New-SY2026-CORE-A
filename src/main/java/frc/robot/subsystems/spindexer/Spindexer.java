@@ -45,7 +45,7 @@ public class Spindexer extends FullSubsystem {
     io.applyOutputs(outputs);
   }
 
-  public Command runSpindexer() {
+  public Command RunSpindexer() {
     return runEnd(
         () -> {
           setTargetSpeed(SpindexerConstants.activeSpeed);
@@ -55,7 +55,13 @@ public class Spindexer extends FullSubsystem {
         });
   }
 
-  public Command startSpindexer() {
+  public Command StartSpindexer() {
+    return run(
+        () -> {
+          setTargetSpeed(SpindexerConstants.activeSpeed);
+        });
+  }
+  public Command StopSpindexer() {
     return run(
         () -> {
           setTargetSpeed(SpindexerConstants.activeSpeed);

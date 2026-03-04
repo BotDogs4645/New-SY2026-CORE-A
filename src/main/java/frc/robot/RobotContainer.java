@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -55,9 +56,9 @@ public class RobotContainer {
   private final Intake intake;
 
   // vision systemns
-  //   private final Vision vision;
-  //   private final VisionIOQuestNav questNavIO;
-  //   private final VisionIOLimelight limelightIO;
+  // private final Vision vision;
+  // private final VisionIOQuestNav questNavIO;
+  // private final VisionIOLimelight limelightIO;
 
   // Controller
   private final CommandXboxController driveController = new CommandXboxController(0);
@@ -125,7 +126,8 @@ public class RobotContainer {
 
     // vision instantiation
     // questNavIO = new VisionIOQuestNav();
-    // limelightIO = new VisionIOLimelight(VisionConstants.limelightName, drive::getRotation);
+    // limelightIO = new VisionIOLimelight(VisionConstants.limelightName,
+    // drive::getRotation);
     // vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
 
     // subsystems
@@ -194,10 +196,9 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    operatorPanel.button(7).onTrue(intake.armDown());
-    operatorPanel.button(6).whileTrue(shootCommand());
-
-    operatorPanel.button(10).whileTrue(intake.startIntake());
+    operatorPanel.button(7).onTrue(intake.ExtendIntake());
+    operatorPanel.button(6).whileTrue(ShootBalls());
+    operatorPanel.button(10).whileTrue(intake.RunIntake());
   }
 
   /**
@@ -209,17 +210,18 @@ public class RobotContainer {
     return autoChooser.get();
   }
 
-  public Command shootCommand() {
+  public Command ShootBalls() {
     return new SequentialCommandGroup(
-            shooter.startShooter(),
+            shooter.StartShooter(),
             new WaitCommand(0.2),
-            shooter.startKicker(),
-            spindexer.startSpindexer())
-        .finallyDo(
-            () -> {
-              shooter.setKickerGoalSpeedRadPerSec(0);
-              shooter.setShooterGoalSpeedRadPerSec(0);
-              spindexer.setTargetSpeed(0);
-            });
+            shooter.StartKicker(),
+            spindexer.StartSpindexer())
+        .andThen(Commands.idle())
+        .finallyDo(() -> CommandScheduler.getInstance().schedule(StopShooting()));
+  }
+
+  public Command StopShooting() {
+    return Commands.parallel(
+        shooter.StopShooter(), shooter.StopKicker(), spindexer.StopSpindexer());
   }
 }

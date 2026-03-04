@@ -54,16 +54,13 @@ public class IntakeIOTalonFX implements IntakeIO {
       }
       case DUTY_CYCLE -> {
         Logger.recordOutput("Intake/IOoutputMode", "DUTYCYCLE");
-        Logger.recordOutput("Intake/IOoutputSpeed", outputs.goalSpeedRadPerSec);
-        rollerMotor.setControl(dutyCycleRequest.withOutput(outputs.goalSpeedRadPerSec));
-      }
-      case POSITION -> {
-        rollerMotor.setControl(neutralOut);
+        Logger.recordOutput("Intake/IOoutputSpeed", outputs.rollerOutputLevel);
+        rollerMotor.setControl(dutyCycleRequest.withOutput(outputs.rollerOutputLevel));
       }
     }
     switch (outputs.armMode) {
       case POSITION -> {
-        double rotations = Units.radiansToRotations(outputs.armGoalRadPosition);
+        double rotations = Units.radiansToRotations(outputs.armGoalPosition.motorPositionRad);
         armMotor.setControl(armRequest.withPosition(rotations));
       }
       case COAST -> {
@@ -82,22 +79,21 @@ public class IntakeIOTalonFX implements IntakeIO {
 
   public IntakeIOTalonFX() {
     var intakeConfig = new TalonFXConfiguration();
-    intakeConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    intakeConfig.MotorOutput.Inverted = IntakeConstants.rollersInverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
     // intake config here
     tryUntilOk(5, () -> rollerMotor.getConfigurator().apply(intakeConfig, 0.25));
 
     var armConfig = new TalonFXConfiguration();
     armConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    armConfig.Slot0.kP = 5.0;
+    armConfig.Slot0.kP = IntakeConstants.armKP;
     armConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-    armConfig.Slot0.kG = 0.1;
+    armConfig.Slot0.kG = IntakeConstants.armKG;
 
-    armConfig.Voltage.PeakForwardVoltage = 3.0;
-    armConfig.Voltage.PeakReverseVoltage = -3.0;
+    armConfig.Voltage.PeakForwardVoltage = IntakeConstants.armPeakForwardVoltage;
+    armConfig.Voltage.PeakReverseVoltage = IntakeConstants.armPeakReverseVoltage;
 
-    // REALLY slow (units are rotations/sec and rotations/sec^2)
-    armConfig.MotionMagic.MotionMagicCruiseVelocity = 5; // very slow
-    armConfig.MotionMagic.MotionMagicAcceleration = 1; // gentle accel
+    armConfig.MotionMagic.MotionMagicCruiseVelocity = IntakeConstants.armMotionMagicCruiseVelocity;
+    armConfig.MotionMagic.MotionMagicAcceleration = IntakeConstants.armMotionMagicAcceleration;
     tryUntilOk(5, () -> armMotor.getConfigurator().apply(armConfig, 0.25));
 
     armMotor.setPosition(IntakeConstants.kArmUpRad);

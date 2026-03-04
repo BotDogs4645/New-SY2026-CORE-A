@@ -1,6 +1,9 @@
 package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.controls.ControlRequest;
+
+import frc.robot.subsystems.intake.IntakeConstants.ArmMechanismPosition;
+
 import org.littletonrobotics.junction.AutoLog;
 
 public interface IntakeIO {
@@ -31,10 +34,10 @@ public interface IntakeIO {
 
   class IntakeIOOutputs {
     public IntakeOutputMode rollerMode = IntakeOutputMode.COAST;
-    public double goalSpeedRadPerSec = 0.0;
+    public double rollerOutputLevel = 0.0;
 
     // Arm
     public IntakeOutputMode armMode = IntakeOutputMode.BRAKE;
-    public double armGoalRadPosition = 0.0;
+    public ArmMechanismPosition armGoalPosition = ArmMechanismPosition.ARM_UP;
   }
 }

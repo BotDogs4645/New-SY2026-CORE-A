@@ -92,7 +92,7 @@ public class Shooter extends FullSubsystem {
         });
   }
 
-  public Command stopShooter() {
+  public Command StopShooter() {
     return runOnce(
         () -> {
           setKickerGoalSpeedRadPerSec(0.0);
@@ -100,7 +100,7 @@ public class Shooter extends FullSubsystem {
         });
   }
 
-  public Command runShooter() {
+  public Command RunShooter() {
     return Commands.sequence(
         runOnce(() -> setShooterGoalSpeedRadPerSec(300)),
         Commands.waitSeconds(0.2),
@@ -112,17 +112,24 @@ public class Shooter extends FullSubsystem {
             }));
   }
 
-  public Command startShooter() {
+  public Command StartShooter() {
     return runOnce(
         () -> {
           setShooterGoalSpeedRadPerSec(600);
         });
   }
 
-  public Command startKicker() {
+  public Command StartKicker() {
     return runOnce(
         () -> {
           setKickerGoalSpeedRadPerSec(600);
+        });
+  }
+
+  public Command StopKicker() {
+    return runOnce(
+        () -> {
+          setKickerGoalSpeedRadPerSec(0);
         });
   }
 }
