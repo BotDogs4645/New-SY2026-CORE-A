@@ -54,4 +54,11 @@ public class Spindexer extends FullSubsystem {
           setTargetSpeed(0);
         });
   }
+
+  public Command startSpindexer() {
+    return run(
+        () -> {
+          setTargetSpeed(SpindexerConstants.activeSpeed);
+        });
+  }
 }

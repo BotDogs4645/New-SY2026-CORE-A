@@ -111,4 +111,18 @@ public class Shooter extends FullSubsystem {
               setShooterGoalSpeedRadPerSec(0.0);
             }));
   }
+
+  public Command startShooter() {
+    return runOnce(
+        () -> {
+          setShooterGoalSpeedRadPerSec(600);
+        });
+  }
+
+  public Command startKicker() {
+    return runOnce(
+        () -> {
+          setKickerGoalSpeedRadPerSec(600);
+        });
+  }
 }

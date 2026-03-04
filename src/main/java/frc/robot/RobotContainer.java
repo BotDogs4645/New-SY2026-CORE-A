@@ -14,6 +14,9 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
@@ -26,10 +29,14 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretIOTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -41,10 +48,11 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  //   private final Turret turret;
+  private final Turret turret;
   private final Shooter shooter;
   private final Hood hood;
   private final Spindexer spindexer;
+  private final Intake intake;
 
   // vision systemns
   //   private final Vision vision;
@@ -53,6 +61,7 @@ public class RobotContainer {
 
   // Controller
   private final CommandXboxController driveController = new CommandXboxController(0);
+  private final CommandJoystick operatorPanel = new CommandJoystick(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -120,10 +129,11 @@ public class RobotContainer {
     // vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
 
     // subsystems
-    // turret = new Turret(new TurretIOTalonFX());
+    turret = new Turret(new TurretIOTalonFX());
     shooter = new Shooter(new ShooterIOTalonFX());
     hood = new Hood(new HoodIOTalonFX());
     spindexer = new Spindexer(new SpindexerIOTalonFX());
+    intake = new Intake(new IntakeIOTalonFX());
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -184,14 +194,10 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    driveController.x().onTrue(intake.armDown());
-    driveController.y().whileTrue(intake.rollersInHeld());
+    operatorPanel.button(7).onTrue(intake.armDown());
+    operatorPanel.button(6).whileTrue(shootCommand());
 
-    // left bumper follows hub
-    driveController.leftBumper().whileTrue(shooter.runShooter());
-    driveController.rightBumper().onTrue(hood.raiseHood());
-    driveController.rightTrigger().onTrue(hood.lowerHood());
-    driveController.leftTrigger().whileTrue(spindexer.runSpindexer());
+    operatorPanel.button(10).whileTrue(intake.startIntake());
   }
 
   /**
@@ -201,5 +207,19 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  public Command shootCommand() {
+    return new SequentialCommandGroup(
+            shooter.startShooter(),
+            new WaitCommand(0.2),
+            shooter.startKicker(),
+            spindexer.startSpindexer())
+        .finallyDo(
+            () -> {
+              shooter.setKickerGoalSpeedRadPerSec(0);
+              shooter.setShooterGoalSpeedRadPerSec(0);
+              spindexer.setTargetSpeed(0);
+            });
   }
 }

@@ -94,7 +94,7 @@ public class Intake extends FullSubsystem {
   public Command startIntake() {
     return runEnd(
         () -> {
-          setRollerSpeedRadPerSec(0.30);
+          setRollerSpeedRadPerSec(0.42);
         },
         () -> {
           setRollerSpeedRadPerSec(0);

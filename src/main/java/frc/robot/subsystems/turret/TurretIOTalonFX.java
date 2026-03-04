@@ -11,6 +11,8 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -39,14 +41,22 @@ public class TurretIOTalonFX implements TurretIO {
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = TurretConstants.forwardLimit;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = TurretConstants.reverseLimit;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+
+    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+    motorConfig.Slot0.kP = 5;
+
+    turretMotor.setPosition(0);
 
     tryUntilOk(5, () -> turretMotor.getConfigurator().apply(motorConfig, 0.25));
 
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(turretMotor);
+    turretMotor.setControl(neutralControl);
   }
 
   @Override
@@ -64,8 +74,8 @@ public class TurretIOTalonFX implements TurretIO {
   }
 
   // sets the position of the built in TalonFX encoder in radians
-  @Override
-  public void setEncoderPosition(double positionRad) {
-    turretMotor.setPosition(Units.radiansToRotations(positionRad));
-  }
+  // @Override
+  // public void setEncoderPosition(double positionRad) {
+  //   turretMotor.setPosition(Units.radiansToRotations(positionRad));
+  // }
 }

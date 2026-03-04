@@ -51,7 +51,6 @@ public class HoodIOTalonFX implements HoodIO {
     throughboreEncoder.setPosition(0);
     hoodMotor.setPosition(0);
 
-
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(hoodMotor);
   }

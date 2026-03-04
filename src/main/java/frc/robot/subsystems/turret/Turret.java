@@ -75,4 +75,8 @@ public class Turret extends SubsystemBase {
         angle.minus(new Rotation2d(TurretConstants.physicalStartingPosition));
     return withInitialPos.getRotations() * TurretConstants.gearRatio;
   }
+
+  public void resetEncoder() {
+    io.setEncoderPosition(0);
+  }
 }
