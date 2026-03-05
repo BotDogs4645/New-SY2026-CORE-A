@@ -79,7 +79,10 @@ public class IntakeIOTalonFX implements IntakeIO {
 
   public IntakeIOTalonFX() {
     var intakeConfig = new TalonFXConfiguration();
-    intakeConfig.MotorOutput.Inverted = IntakeConstants.rollersInverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+    intakeConfig.MotorOutput.Inverted =
+        IntakeConstants.rollersInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
     // intake config here
     tryUntilOk(5, () -> rollerMotor.getConfigurator().apply(intakeConfig, 0.25));
 

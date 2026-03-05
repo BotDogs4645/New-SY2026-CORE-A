@@ -50,9 +50,8 @@ public class TurretIOTalonFX implements TurretIO {
 
     motorConfig.Slot0.kP = 5;
 
-    turretMotor.setPosition(0);
-
     tryUntilOk(5, () -> turretMotor.getConfigurator().apply(motorConfig, 0.25));
+    turretMotor.setPosition(0);
 
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(turretMotor);
