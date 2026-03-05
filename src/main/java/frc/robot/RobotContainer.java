@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
@@ -209,8 +210,21 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return autoChooser.get();
   }
-
+  
   public Command ShootBalls() {
+    return Commands.parallel(
+      shooter.RunShooter(),
+      Commands.sequence(
+        Commands.waitSeconds(0.2),
+        Commands.parallel(
+          shooter.RunKicker(),
+          spindexer.RunSpindexer()
+        )
+      )
+    );
+  }
+
+  public Command OldShootBalls() {
     return new SequentialCommandGroup(
             shooter.StartShooter(),
             new WaitCommand(0.2),

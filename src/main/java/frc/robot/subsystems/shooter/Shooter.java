@@ -101,15 +101,10 @@ public class Shooter extends FullSubsystem {
   }
 
   public Command RunShooter() {
-    return Commands.sequence(
-        runOnce(() -> setShooterGoalSpeedRadPerSec(300)),
-        Commands.waitSeconds(0.2),
-        startEnd(
-            () -> setKickerGoalSpeedRadPerSec(300),
-            () -> {
-              setKickerGoalSpeedRadPerSec(0.0);
-              setShooterGoalSpeedRadPerSec(0.0);
-            }));
+    return runEnd(()-> setShooterGoalSpeedRadPerSec(600), ()->setShooterGoalSpeedRadPerSec(0));
+  }
+  public Command RunKicker() {
+    return runEnd(()-> setKickerGoalSpeedRadPerSec(600), ()->setKickerGoalSpeedRadPerSec(0));
   }
 
   public Command StartShooter() {
