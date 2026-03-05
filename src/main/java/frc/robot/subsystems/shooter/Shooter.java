@@ -10,6 +10,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.shooter.ShooterIO.ShooterIOOutputs;
 import frc.robot.subsystems.shooter.ShooterIO.ShooterOutputMode;
 import frc.robot.util.FullSubsystem;
+
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Shooter extends FullSubsystem {
@@ -33,6 +35,11 @@ public class Shooter extends FullSubsystem {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);
+  }
+
+  @AutoLogOutput
+  public boolean atGoalSpeed() {
+    return atGoalSpeed;
   }
 
   @Override
@@ -101,28 +108,23 @@ public class Shooter extends FullSubsystem {
   }
 
   public Command RunShooter() {
-    return Commands.sequence(
-        runOnce(() -> setShooterGoalSpeedRadPerSec(300)),
-        Commands.waitSeconds(0.2),
-        startEnd(
-            () -> setKickerGoalSpeedRadPerSec(300),
-            () -> {
-              setKickerGoalSpeedRadPerSec(0.0);
-              setShooterGoalSpeedRadPerSec(0.0);
-            }));
+    return startEnd(()-> setShooterGoalSpeedRadPerSec(ShooterConstants.shooterDefaultSpeedRadPerSec), ()->setShooterGoalSpeedRadPerSec(0));
+  }
+  public Command RunKicker() {
+    return startEnd(()-> setKickerGoalSpeedRadPerSec(ShooterConstants.kickerDefaultSpeedRadPerSec), ()->setKickerGoalSpeedRadPerSec(0));
   }
 
   public Command StartShooter() {
     return runOnce(
         () -> {
-          setShooterGoalSpeedRadPerSec(600);
+          setShooterGoalSpeedRadPerSec(ShooterConstants.shooterDefaultSpeedRadPerSec);
         });
   }
 
   public Command StartKicker() {
     return runOnce(
         () -> {
-          setKickerGoalSpeedRadPerSec(600);
+          setKickerGoalSpeedRadPerSec(ShooterConstants.kickerDefaultSpeedRadPerSec);
         });
   }
 

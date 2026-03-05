@@ -26,10 +26,6 @@ public class TurretIOTalonFX implements TurretIO {
   private final StatusSignal<Current> supplyCurrent = turretMotor.getSupplyCurrent();
   private final StatusSignal<Angle> positionRot = turretMotor.getPosition();
   private final StatusSignal<AngularVelocity> velocityRotPerSec = turretMotor.getVelocity();
-  private final DutyCycleOut shooterActiveDutyCycle =
-      new DutyCycleOut(ShooterConstants.shooterActiveVoltageProportion);
-  private final DutyCycleOut kickerActiveDutyCycle =
-      new DutyCycleOut(ShooterConstants.kickerActiveVoltageProportion);
   private final NeutralOut neutralControl = new NeutralOut();
   private final CoastOut coastControl = new CoastOut();
 

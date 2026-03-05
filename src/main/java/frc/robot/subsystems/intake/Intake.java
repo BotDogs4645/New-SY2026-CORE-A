@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import frc.robot.subsystems.intake.IntakeConstants.ArmMechanismPosition;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.subsystems.intake.IntakeIO.IntakeOutputMode;
@@ -21,6 +22,8 @@ public class Intake extends FullSubsystem {
   private IntakeOutputMode armOutputMode = IntakeOutputMode.COAST;
   // State helpers but its lowkenuinely dead code rn
   private boolean rollerAtGoal = false;
+
+  private boolean hasExtendedIntake = false;
 
   /** Creates a new Intake. */
   public Intake(IntakeIO io) {
@@ -64,6 +67,11 @@ public class Intake extends FullSubsystem {
     return Math.abs(inputs.armAngleRad - armGoalPosition.motorPositionRad) < 0.6;
   }
 
+  @AutoLogOutput
+  public boolean hasExtendedIntake() {
+    return hasExtendedIntake;
+  }
+
   public Command RollersInHeld() {
     return startEnd(
         () -> setRollerOutput(IntakeConstants.kRollerInRadPerSec),
@@ -81,7 +89,8 @@ public class Intake extends FullSubsystem {
             () -> {
               setRollerOutput(0);
               armOutputMode = IntakeOutputMode.COAST;
-            }));
+              hasExtendedIntake = true;
+            })).unless(this::hasExtendedIntake);
   }
 
   public Command StopIntake() {
