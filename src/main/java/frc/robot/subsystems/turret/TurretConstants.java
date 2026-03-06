@@ -8,8 +8,9 @@ public final class TurretConstants {
   public static final CANBus motorCanBus = new CANBus("CANivore");
 
   public static final double kP = 5;
+  public static final double kI = 0.2;
   public static final double kD = 0.4;
-  public static final double kS = 0.01;
+  public static final double kS = 0.04;
 
   public static final double motionMagicCruiseVelocity = 20;
   public static final double motionMagicAcceleration = 15;

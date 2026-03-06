@@ -44,6 +44,7 @@ public class TurretIOTalonFX implements TurretIO {
 
     motorConfig.Slot0.kP = TurretConstants.kP;
     motorConfig.Slot0.kD = TurretConstants.kD;
+    motorConfig.Slot0.kI = TurretConstants.kI;
     motorConfig.Slot0.kS = TurretConstants.kS;
 
     tryUntilOk(5, () -> turretMotor.getConfigurator().apply(motorConfig, 0.25));
