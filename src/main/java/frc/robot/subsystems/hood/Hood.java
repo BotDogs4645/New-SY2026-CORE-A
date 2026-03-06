@@ -233,14 +233,19 @@ public class Hood extends FullSubsystem {
   }
 
   private double sensorRadToHoodRad(double sensorRad) {
-    double hoodRad = sensorRad / HoodConstants.gearRatio;
+    double sensorRot = Units.radiansToRotations(sensorRad);
+    // double hoodRot = (sensorRot - HoodConstants.offset) / HoodConstants.gearRatio;
+    double hoodRot = sensorRot;
+    double hoodRad = Units.rotationsToRadians(hoodRot);
+
     Logger.recordOutput("Hood/Convert/SensorRadToHoodRad/OutputHoodRad", hoodRad);
     return hoodRad;
   }
 
   private double hoodRadToSensorRot(double hoodRad) {
     double hoodRot = Units.radiansToRotations(hoodRad);
-    double sensorRot = hoodRot * HoodConstants.gearRatio + HoodConstants.offset;
+    // double sensorRot = hoodRot * HoodConstants.gearRatio + HoodConstants.offset;
+    double sensorRot = hoodRot;
     Logger.recordOutput("Hood/Convert/HoodRadToSensorRot", sensorRot);
     return sensorRot;
   }

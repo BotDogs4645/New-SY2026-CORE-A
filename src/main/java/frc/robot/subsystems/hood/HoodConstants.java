@@ -13,12 +13,12 @@ public final class HoodConstants {
   public static final double motionMagicJerk = 0.0;
 
   // Inches
-  public static final double hubHeight = 72;
-  public static final double gravity = 386.09;
+  public static final double hubHeight = 1.82;
+  public static final double gravity = 9.8;
 
-  public static final double ballExitAngle = Math.toRadians(35);
+  public static final double ballExitAngle = 0.065;
 
-  public static final double exitVelo = 334.646;
+  public static final double exitVelo = 8.5;
 
   public static final double gearRatio = 45;
   public static final double offset = 0;
