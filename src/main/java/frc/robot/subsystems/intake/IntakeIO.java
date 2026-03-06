@@ -1,9 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.controls.ControlRequest;
-
 import frc.robot.subsystems.intake.IntakeConstants.ArmMechanismPosition;
-
 import org.littletonrobotics.junction.AutoLog;
 
 public interface IntakeIO {

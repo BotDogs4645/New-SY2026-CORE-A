@@ -45,10 +45,15 @@ public class Hood extends FullSubsystem {
     Logger.recordOutput("Hood/TargetRot", targetPosition);
     Logger.recordOutput("Hood/CurrentRot", Units.radiansToRotations(inputs.positionRad));
     Logger.recordOutput("Hood/Periodic/CurrentPositionRad", inputs.positionRad);
-    Logger.recordOutput("Hood/Periodic/CurrentPositionHoodRad", sensorRadToHoodRad(inputs.positionRad));
+    Logger.recordOutput(
+        "Hood/Periodic/CurrentPositionHoodRad", sensorRadToHoodRad(inputs.positionRad));
     Logger.recordOutput("Hood/Periodic/OutputMode", outputMode.name());
-    Logger.recordOutput("Hood/Periodic/TargetErrorRot", targetPosition - Units.radiansToRotations(inputs.positionRad));
-    Logger.recordOutput("Hood/Periodic/TargetErrorAbsRot", Math.abs(targetPosition - Units.radiansToRotations(inputs.positionRad)));
+    Logger.recordOutput(
+        "Hood/Periodic/TargetErrorRot",
+        targetPosition - Units.radiansToRotations(inputs.positionRad));
+    Logger.recordOutput(
+        "Hood/Periodic/TargetErrorAbsRot",
+        Math.abs(targetPosition - Units.radiansToRotations(inputs.positionRad)));
   }
 
   public void setTargetPosition(double position) {
@@ -74,7 +79,8 @@ public class Hood extends FullSubsystem {
     Logger.recordOutput("Hood/PeriodicAfterScheduler/OutputTargetRot", outputs.targetPosition);
     Logger.recordOutput("Hood/PeriodicAfterScheduler/CurrentRot", currentPosition);
     Logger.recordOutput("Hood/PeriodicAfterScheduler/CurrentRad", inputs.positionRad);
-    Logger.recordOutput("Hood/PeriodicAfterScheduler/CurrentHoodRad", sensorRadToHoodRad(inputs.positionRad));
+    Logger.recordOutput(
+        "Hood/PeriodicAfterScheduler/CurrentHoodRad", sensorRadToHoodRad(inputs.positionRad));
     Logger.recordOutput(
         "Hood/PeriodicAfterScheduler/ErrorRot", outputs.targetPosition - currentPosition);
     if (Math.abs(currentPosition - targetPosition) < 0.004) {
@@ -227,14 +233,19 @@ public class Hood extends FullSubsystem {
   }
 
   private double sensorRadToHoodRad(double sensorRad) {
-    double hoodRad = sensorRad / HoodConstants.gearRatio;
+    double sensorRot = Units.radiansToRotations(sensorRad);
+    // double hoodRot = (sensorRot - HoodConstants.offset) / HoodConstants.gearRatio;
+    double hoodRot = sensorRot;
+    double hoodRad = Units.rotationsToRadians(hoodRot);
+
     Logger.recordOutput("Hood/Convert/SensorRadToHoodRad/OutputHoodRad", hoodRad);
     return hoodRad;
   }
 
   private double hoodRadToSensorRot(double hoodRad) {
     double hoodRot = Units.radiansToRotations(hoodRad);
-    double sensorRot = hoodRot * HoodConstants.gearRatio + HoodConstants.offset;
+    // double sensorRot = hoodRot * HoodConstants.gearRatio + HoodConstants.offset;
+    double sensorRot = hoodRot;
     Logger.recordOutput("Hood/Convert/HoodRadToSensorRot", sensorRot);
     return sensorRot;
   }
