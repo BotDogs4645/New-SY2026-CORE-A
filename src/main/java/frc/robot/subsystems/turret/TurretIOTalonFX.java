@@ -7,7 +7,6 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.ControlRequest;
-import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -17,7 +16,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
-import frc.robot.subsystems.shooter.ShooterConstants;
 
 public class TurretIOTalonFX implements TurretIO {
   private final TalonFX turretMotor =
@@ -44,7 +42,9 @@ public class TurretIOTalonFX implements TurretIO {
 
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    motorConfig.Slot0.kP = 5;
+    motorConfig.Slot0.kP = TurretConstants.kP;
+    motorConfig.Slot0.kD = TurretConstants.kD;
+    motorConfig.Slot0.kS = TurretConstants.kS;
 
     tryUntilOk(5, () -> turretMotor.getConfigurator().apply(motorConfig, 0.25));
     turretMotor.setPosition(0);

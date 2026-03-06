@@ -45,10 +45,15 @@ public class Hood extends FullSubsystem {
     Logger.recordOutput("Hood/TargetRot", targetPosition);
     Logger.recordOutput("Hood/CurrentRot", Units.radiansToRotations(inputs.positionRad));
     Logger.recordOutput("Hood/Periodic/CurrentPositionRad", inputs.positionRad);
-    Logger.recordOutput("Hood/Periodic/CurrentPositionHoodRad", sensorRadToHoodRad(inputs.positionRad));
+    Logger.recordOutput(
+        "Hood/Periodic/CurrentPositionHoodRad", sensorRadToHoodRad(inputs.positionRad));
     Logger.recordOutput("Hood/Periodic/OutputMode", outputMode.name());
-    Logger.recordOutput("Hood/Periodic/TargetErrorRot", targetPosition - Units.radiansToRotations(inputs.positionRad));
-    Logger.recordOutput("Hood/Periodic/TargetErrorAbsRot", Math.abs(targetPosition - Units.radiansToRotations(inputs.positionRad)));
+    Logger.recordOutput(
+        "Hood/Periodic/TargetErrorRot",
+        targetPosition - Units.radiansToRotations(inputs.positionRad));
+    Logger.recordOutput(
+        "Hood/Periodic/TargetErrorAbsRot",
+        Math.abs(targetPosition - Units.radiansToRotations(inputs.positionRad)));
   }
 
   public void setTargetPosition(double position) {
@@ -74,7 +79,8 @@ public class Hood extends FullSubsystem {
     Logger.recordOutput("Hood/PeriodicAfterScheduler/OutputTargetRot", outputs.targetPosition);
     Logger.recordOutput("Hood/PeriodicAfterScheduler/CurrentRot", currentPosition);
     Logger.recordOutput("Hood/PeriodicAfterScheduler/CurrentRad", inputs.positionRad);
-    Logger.recordOutput("Hood/PeriodicAfterScheduler/CurrentHoodRad", sensorRadToHoodRad(inputs.positionRad));
+    Logger.recordOutput(
+        "Hood/PeriodicAfterScheduler/CurrentHoodRad", sensorRadToHoodRad(inputs.positionRad));
     Logger.recordOutput(
         "Hood/PeriodicAfterScheduler/ErrorRot", outputs.targetPosition - currentPosition);
     if (Math.abs(currentPosition - targetPosition) < 0.004) {

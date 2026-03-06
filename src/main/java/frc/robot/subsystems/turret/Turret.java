@@ -4,7 +4,7 @@
 
 package frc.robot.subsystems.turret;
 
-import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -43,29 +43,39 @@ public class Turret extends SubsystemBase {
   }
 
   public Command followTargetPosition(Supplier<Pose2d> currentPoseSupplier, Pose2d targetPose) {
-    MotionMagicDutyCycle controlRequest =
-        new MotionMagicDutyCycle(getOptimalRotation(currentPoseSupplier.get(), targetPose));
+    MotionMagicVoltage controlRequest =
+        new MotionMagicVoltage(getOptimalRotation(currentPoseSupplier.get(), targetPose));
     return runEnd(
         () -> {
           io.setMotorControl(
               controlRequest.withPosition(
                   getOptimalRotation(currentPoseSupplier.get(), targetPose)));
+          Logger.recordOutput(
+              "Turret/optimalPosition", getOptimalRotation(currentPoseSupplier.get(), targetPose));
         },
-        () -> io.setMotorControl(neutralControlRequest));
+        () -> {
+          io.setMotorControl(neutralControlRequest);
+        });
   }
 
   // returns the position (in rotations) to spin the motor to in order to follow a
   // target
   @AutoLogOutput
   public double getOptimalRotation(Pose2d curPose, Pose2d targetPose) {
-    Transform2d transformToTarget = targetPose.minus(curPose);
-    Translation2d translationToTarget = transformToTarget.getTranslation();
+    Transform2d transformToTarget = curPose.minus(targetPose);
+    Logger.recordOutput("Turret/transformToTarget", transformToTarget);
+    Translation2d translationToTarget = transformToTarget.getTranslation().times(-1);
+    Logger.recordOutput("Turret/translationToTarget", translationToTarget);
 
     Rotation2d translationDirectionToTarget =
         new Rotation2d(translationToTarget.getX(), translationToTarget.getY());
+    Logger.recordOutput(
+        "Turret/translationDirectionToTarget", translationDirectionToTarget.getDegrees());
     Rotation2d tranformAngle = transformToTarget.getRotation();
+    Logger.recordOutput("Turret/transformAngle", tranformAngle.getDegrees());
 
-    Rotation2d rotationToTarget = translationDirectionToTarget.plus(tranformAngle);
+    Rotation2d rotationToTarget = translationDirectionToTarget.minus(tranformAngle);
+    Logger.recordOutput("Turret/rotationToTarget", rotationToTarget.getDegrees());
 
     return convertToTurretPosition(rotationToTarget);
   }

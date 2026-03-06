@@ -2,8 +2,6 @@ package frc.robot.subsystems.shooter;
 
 import com.ctre.phoenix6.CANBus;
 
-import edu.wpi.first.units.measure.Time;
-
 public final class ShooterConstants {
   public static final int shooterMotorCanId = 16;
   public static final CANBus shooterMotorCanBus = new CANBus("CANivore");

@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
@@ -33,8 +32,8 @@ import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
@@ -56,6 +55,7 @@ public class RobotContainer {
   private final Hood hood;
   private final Spindexer spindexer;
   private final Intake intake;
+  private final Leds leds;
 
   // vision systemns
   // private final Vision vision;
@@ -138,6 +138,7 @@ public class RobotContainer {
     hood = new Hood(new HoodIOTalonFX());
     spindexer = new Spindexer(new SpindexerIOTalonFX());
     intake = new Intake(new IntakeIOTalonFX());
+    leds = new Leds();
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -198,9 +199,16 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    operatorPanel.button(7).onTrue(intake.ExtendIntake());
-    operatorPanel.button(6).whileTrue(ShootBalls());
-    operatorPanel.button(10).whileTrue(intake.RunIntake());
+    // operatorPanel.button(7).onTrue(intake.ExtendIntake());
+    // operatorPanel.button(6).whileTrue(OldShootBalls());
+    // operatorPanel.button(10).whileTrue(intake.RunIntake());
+
+    // driveController.leftBumper().onTrue(intake.ExtendIntake());
+    // driveController.leftTrigger().whileTrue(intake.RunIntake());
+    driveController.rightBumper().whileTrue(turret.followHub(drive::getPose));
+
+    // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose));
+    // driveController.rightTrigger().onTrue(leds.BlinkLEDs());
   }
 
   /**
@@ -211,19 +219,14 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return autoChooser.get();
   }
-  
-  public Command ShootBalls() {
-    return Commands.parallel(
-      shooter.RunShooter(),
-      Commands.sequence(
-        Commands.waitUntil(shooter::atGoalSpeed),
-        Commands.parallel(
-          shooter.RunKicker(),
-          spindexer.RunSpindexer()
-        )
-      )
-    );
-  }
+
+  // public Command ShootBalls() {
+  //   return Commands.parallel(
+  //       shooter.RunShooter(),
+  //       Commands.sequence(
+  //           Commands.waitUntil(shooter::atGoalSpeed),
+  //           Commands.parallel(shooter.RunKicker(), spindexer.RunSpindexer())));
+  // }
 
   public Command OldShootBalls() {
     return new SequentialCommandGroup(

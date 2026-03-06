@@ -2,7 +2,6 @@ package frc.robot.subsystems.intake;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import frc.robot.subsystems.intake.IntakeConstants.ArmMechanismPosition;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.subsystems.intake.IntakeIO.IntakeOutputMode;
@@ -74,23 +73,23 @@ public class Intake extends FullSubsystem {
 
   public Command RollersInHeld() {
     return startEnd(
-        () -> setRollerOutput(IntakeConstants.kRollerInRadPerSec),
-        () -> setRollerOutput(0.0));
+        () -> setRollerOutput(IntakeConstants.kRollerInRadPerSec), () -> setRollerOutput(0.0));
   }
 
   public Command ExtendIntake() {
     return Commands.sequence(
-        runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_HALF_DOWN)),
-        Commands.waitUntil(this::armAtGoal),
-        runOnce(() -> setRollerOutput(IntakeConstants.armDownRollerOutput)),
-        runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_DOWN)),
-        Commands.waitUntil(this::armAtGoal),
-        runOnce(
-            () -> {
-              setRollerOutput(0);
-              armOutputMode = IntakeOutputMode.COAST;
-              hasExtendedIntake = true;
-            })).unless(this::hasExtendedIntake);
+            runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_HALF_DOWN)),
+            Commands.waitUntil(this::armAtGoal),
+            runOnce(() -> setRollerOutput(IntakeConstants.armDownRollerOutput)),
+            runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_DOWN)),
+            Commands.waitUntil(this::armAtGoal),
+            runOnce(
+                () -> {
+                  setRollerOutput(0);
+                  armOutputMode = IntakeOutputMode.COAST;
+                  hasExtendedIntake = true;
+                }))
+        .unless(this::hasExtendedIntake);
   }
 
   public Command StopIntake() {
@@ -116,5 +115,4 @@ public class Intake extends FullSubsystem {
           setRollerOutput(0);
         });
   }
-
 }

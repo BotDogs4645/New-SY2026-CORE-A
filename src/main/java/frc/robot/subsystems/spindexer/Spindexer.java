@@ -61,6 +61,7 @@ public class Spindexer extends FullSubsystem {
           setTargetSpeed(SpindexerConstants.activeSpeed);
         });
   }
+
   public Command StopSpindexer() {
     return run(
         () -> {

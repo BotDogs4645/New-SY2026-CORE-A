@@ -5,12 +5,10 @@
 package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.shooter.ShooterIO.ShooterIOOutputs;
 import frc.robot.subsystems.shooter.ShooterIO.ShooterOutputMode;
 import frc.robot.util.FullSubsystem;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -108,10 +106,15 @@ public class Shooter extends FullSubsystem {
   }
 
   public Command RunShooter() {
-    return startEnd(()-> setShooterGoalSpeedRadPerSec(ShooterConstants.shooterDefaultSpeedRadPerSec), ()->setShooterGoalSpeedRadPerSec(0));
+    return startEnd(
+        () -> setShooterGoalSpeedRadPerSec(ShooterConstants.shooterDefaultSpeedRadPerSec),
+        () -> setShooterGoalSpeedRadPerSec(0));
   }
+
   public Command RunKicker() {
-    return startEnd(()-> setKickerGoalSpeedRadPerSec(ShooterConstants.kickerDefaultSpeedRadPerSec), ()->setKickerGoalSpeedRadPerSec(0));
+    return startEnd(
+        () -> setKickerGoalSpeedRadPerSec(ShooterConstants.kickerDefaultSpeedRadPerSec),
+        () -> setKickerGoalSpeedRadPerSec(0));
   }
 
   public Command StartShooter() {

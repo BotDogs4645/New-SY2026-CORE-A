@@ -2,9 +2,6 @@ package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.CANBus;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.measure.Distance;
-
 public final class IntakeConstants {
   public static final int rollerMotorCanId = 17;
   public static final CANBus rollerMotorCanBus = new CANBus("CANivore");
@@ -22,7 +19,7 @@ public final class IntakeConstants {
   public static final double armPeakReverseVoltage = -3.0;
 
   // for active duty cycle out, these values are the proportion of the supply voltage to apply
-  public static final double intakingRollerOutput = 0.42;
+  public static final double intakingRollerOutput = 0.32;
   public static final double armDownRollerOutput = 0.35;
 
   public static final double kRollerInRadPerSec = 30;
@@ -32,13 +29,13 @@ public final class IntakeConstants {
 
   public enum ArmMechanismPosition {
 
-    //in radians
+    // in radians
     ARM_UP(0.0),
     ARM_HALF_DOWN(98.155),
     ARM_DOWN(98.155);
 
-
     public final Double motorPositionRad;
+
     ArmMechanismPosition(double motorPositionRad) {
       this.motorPositionRad = motorPositionRad;
     }
