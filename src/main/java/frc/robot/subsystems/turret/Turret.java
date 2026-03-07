@@ -13,15 +13,26 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.FieldPoses;
+import frc.robot.subsystems.shooter.ShooterIO.ShooterIOOutputs;
+import frc.robot.subsystems.turret.TurretIO.TurretIOOutputs;
+import frc.robot.subsystems.turret.TurretIO.TurretOutputMode;
+import frc.robot.util.FullSubsystem;
+
+import java.io.OutputStream;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Turret extends SubsystemBase {
+public class Turret extends FullSubsystem {
 
   private TurretIO io;
   private NeutralOut neutralControlRequest = new NeutralOut();
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
+  private final TurretIOOutputs outputs = new TurretIOOutputs();
+
+
+  private double goalPositionRad = 0;
+  private TurretOutputMode outputMode = TurretOutputMode.BRAKE;
 
   /** Creates a new Turret. */
   public Turret(TurretIO io) {
@@ -38,27 +49,38 @@ public class Turret extends SubsystemBase {
     Logger.processInputs("Turret", inputs);
   }
 
+
+  @Override
+  public void periodicAfterScheduler() {
+    Logger.recordOutput("Turret/goalPositionRad", goalPositionRad);
+    outputs.mode = outputMode;
+    outputs.goalPositionRad = goalPositionRad;
+  }
+
+  private void setGoalPositionRad(double positionRad) {
+    outputs.mode = TurretOutputMode.POSITION;
+    goalPositionRad = positionRad;
+  }
+
+  private void setMotorBrake() {
+    outputs.mode = TurretOutputMode.BRAKE;
+  }
+
   public Command followHub(Supplier<Pose2d> currentPoseSupplier) {
     return followTargetPosition(currentPoseSupplier, FieldPoses.HUB);
   }
 
   public Command followTargetPosition(Supplier<Pose2d> currentPoseSupplier, Pose2d targetPose) {
-    MotionMagicVoltage controlRequest =
-        new MotionMagicVoltage(getOptimalRotation(currentPoseSupplier.get(), targetPose));
     return runEnd(
         () -> {
-          io.setMotorControl(
-              controlRequest.withPosition(
-                  getOptimalRotation(currentPoseSupplier.get(), targetPose)));
-          Logger.recordOutput(
-              "Turret/optimalPosition", getOptimalRotation(currentPoseSupplier.get(), targetPose));
+          setGoalPositionRad(getOptimalRotation(currentPoseSupplier.get(), targetPose));
         },
         () -> {
-          io.setMotorControl(neutralControlRequest);
+          setMotorBrake();;
         });
   }
 
-  // returns the position (in rotations) to spin the motor to in order to follow a
+  // returns the position (in radians) to spin the motor to in order to follow a
   // target
   @AutoLogOutput
   public double getOptimalRotation(Pose2d curPose, Pose2d targetPose) {
@@ -77,13 +99,7 @@ public class Turret extends SubsystemBase {
     Rotation2d rotationToTarget = translationDirectionToTarget.minus(tranformAngle);
     Logger.recordOutput("Turret/rotationToTarget", rotationToTarget.getDegrees());
 
-    return convertToTurretPosition(rotationToTarget);
-  }
-
-  public double convertToTurretPosition(Rotation2d angle) {
-    Rotation2d withInitialPos =
-        angle.minus(new Rotation2d(TurretConstants.physicalStartingPosition));
-    return withInitialPos.getRotations() * TurretConstants.gearRatio;
+    return rotationToTarget.getRadians();
   }
 
   public void resetEncoder() {

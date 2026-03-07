@@ -1,6 +1,9 @@
 package frc.robot.subsystems.turret;
 
 import com.ctre.phoenix6.controls.ControlRequest;
+
+import frc.robot.subsystems.shooter.ShooterIO.ShooterOutputMode;
+
 import org.littletonrobotics.junction.AutoLog;
 
 public interface TurretIO {
@@ -11,9 +14,20 @@ public interface TurretIO {
     public double velocityRadPerSec = 0.0;
   }
 
+  enum TurretOutputMode {
+    POSITION,
+    BRAKE,
+    COAST
+  }
+
+  class TurretIOOutputs {
+    public TurretOutputMode mode = TurretOutputMode.BRAKE;
+    public double goalPositionRad = 0.0;
+  }
+
   public default void updateInputs(TurretIOInputs inputs) {}
 
-  public default void setMotorControl(ControlRequest control) {}
+  public default void applyOutputs(TurretIOOutputs outputs) {}
 
   public default void setEncoderPosition(double positionRad) {}
 }
