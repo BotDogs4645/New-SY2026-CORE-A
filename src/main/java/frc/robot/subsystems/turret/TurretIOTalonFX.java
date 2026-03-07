@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Rotation;
 import static frc.robot.util.PhoenixUtil.*;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -14,6 +15,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -29,6 +31,8 @@ public class TurretIOTalonFX implements TurretIO {
   private final StatusSignal<Current> supplyCurrent = turretMotor.getSupplyCurrent();
   private final StatusSignal<Angle> positionRot = turretMotor.getPosition();
   private final StatusSignal<AngularVelocity> velocityRotPerSec = turretMotor.getVelocity();
+  private final StatusSignal<ControlModeValue> activeControl = turretMotor.getControlMode();
+
 
   private final NeutralOut brakeRequest = new NeutralOut();
   private final CoastOut coastRequest = new CoastOut();
@@ -59,6 +63,7 @@ public class TurretIOTalonFX implements TurretIO {
 
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(turretMotor);
+    Logger.recordOutput("Turret/IO/talonFXInitialized", true);
     turretMotor.setControl(brakeRequest);
   }
 
@@ -68,7 +73,8 @@ public class TurretIOTalonFX implements TurretIO {
 
     inputs.positionRad = Units.rotationsToRadians(positionRot.getValueAsDouble());
     inputs.velocityRadPerSec = Units.rotationsToRadians(velocityRotPerSec.getValueAsDouble());
-    inputs.supplyCurrent = Units.rotationsToRadians(supplyCurrent.getValueAsDouble());
+    inputs.supplyCurrent = supplyCurrent.getValueAsDouble();
+    inputs.controlMode = activeControl.getValue().toString();
   }
 
   @Override
@@ -82,7 +88,7 @@ public class TurretIOTalonFX implements TurretIO {
 
       case POSITION:
         double positionRot = convertToTurretPosition(outputs.goalPositionRad);
-        Logger.recordOutput("Turret/Raw/goalPositionRot", positionRot);
+        Logger.recordOutput("Turret/IO/goalPositionRot", positionRot);
         turretMotor.setControl(positionRequest.withPosition(positionRot));
     }
   }

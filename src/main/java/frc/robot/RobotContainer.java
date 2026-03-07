@@ -208,7 +208,7 @@ public class RobotContainer {
     // operatorPanel.button(10).whileTrue(intake.RunIntake());
 
     // driveController.leftBumper().onTrue(intake.ExtendIntake());
-    // driveController.leftTrigger().whileTrue(intake.RunIntake());
+    driveController.leftTrigger().whileTrue(intake.RunIntake(driveController.leftTrigger()));
     driveController.rightBumper().whileTrue(turret.followHub(drive::getPose));
 
     // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose));

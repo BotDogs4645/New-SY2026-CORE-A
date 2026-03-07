@@ -6,6 +6,9 @@ import frc.robot.subsystems.intake.IntakeConstants.ArmMechanismPosition;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.subsystems.intake.IntakeIO.IntakeOutputMode;
 import frc.robot.util.FullSubsystem;
+
+import java.util.function.BooleanSupplier;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -106,10 +109,16 @@ public class Intake extends FullSubsystem {
         });
   }
 
-  public Command RunIntake() {
+  public Command RunIntake(BooleanSupplier dislodgeBalls) {
     return runEnd(
         () -> {
           setRollerOutput(IntakeConstants.intakingRollerOutput);
+          if(dislodgeBalls.getAsBoolean()) {
+            setArmGoalPosition(ArmMechanismPosition.DISLODGE_BALLS);
+          }
+          else {
+            setArmGoalPosition(ArmMechanismPosition.ARM_DOWN);
+          }
         },
         () -> {
           setRollerOutput(0);

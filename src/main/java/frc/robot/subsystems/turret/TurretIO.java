@@ -1,9 +1,5 @@
 package frc.robot.subsystems.turret;
 
-import com.ctre.phoenix6.controls.ControlRequest;
-
-import frc.robot.subsystems.shooter.ShooterIO.ShooterOutputMode;
-
 import org.littletonrobotics.junction.AutoLog;
 
 public interface TurretIO {
@@ -12,6 +8,7 @@ public interface TurretIO {
     public double supplyCurrent = 0.0;
     public double positionRad = 0.0;
     public double velocityRadPerSec = 0.0;
+    public String controlMode = "";
   }
 
   enum TurretOutputMode {

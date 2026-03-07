@@ -31,7 +31,8 @@ public final class IntakeConstants {
 
     // in radians
     ARM_UP(0.0),
-    ARM_HALF_DOWN(98.155),
+    ARM_HALF_DOWN(28.815),
+    DISLODGE_BALLS(85),
     ARM_DOWN(98.155);
 
     public final Double motorPositionRad;
