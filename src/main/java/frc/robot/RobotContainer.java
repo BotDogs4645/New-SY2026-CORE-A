@@ -32,6 +32,8 @@ import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
+import frc.robot.subsystems.kicker.Kicker;
+import frc.robot.subsystems.kicker.KickerIOTalonFX;
 import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
@@ -52,6 +54,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Turret turret;
   private final Shooter shooter;
+  private final Kicker kicker;
   private final Hood hood;
   private final Spindexer spindexer;
   private final Intake intake;
@@ -135,6 +138,7 @@ public class RobotContainer {
     // subsystems
     turret = new Turret(new TurretIOTalonFX());
     shooter = new Shooter(new ShooterIOTalonFX());
+    kicker = new Kicker(new KickerIOTalonFX());
     hood = new Hood(new HoodIOTalonFX());
     spindexer = new Spindexer(new SpindexerIOTalonFX());
     intake = new Intake(new IntakeIOTalonFX());
@@ -220,19 +224,19 @@ public class RobotContainer {
     return autoChooser.get();
   }
 
-  // public Command ShootBalls() {
-  //   return Commands.parallel(
-  //       shooter.RunShooter(),
-  //       Commands.sequence(
-  //           Commands.waitUntil(shooter::atGoalSpeed),
-  //           Commands.parallel(shooter.RunKicker(), spindexer.RunSpindexer())));
-  // }
+  public Command ShootBalls() {
+    return Commands.parallel(
+        shooter.RunShooter(),
+        Commands.sequence(
+            Commands.waitUntil(shooter::atGoalSpeed),
+            Commands.parallel(kicker.RunKicker(), spindexer.RunSpindexer())));
+  }
 
   public Command OldShootBalls() {
     return new SequentialCommandGroup(
             shooter.StartShooter(),
             new WaitCommand(0.2),
-            shooter.StartKicker(),
+            kicker.StartKicker(),
             spindexer.StartSpindexer())
         .andThen(Commands.idle())
         .finallyDo(() -> CommandScheduler.getInstance().schedule(StopShooting()));
@@ -240,6 +244,6 @@ public class RobotContainer {
 
   public Command StopShooting() {
     return Commands.parallel(
-        shooter.StopShooter(), shooter.StopKicker(), spindexer.StopSpindexer());
+        shooter.StopShooter(), kicker.StopKicker(), spindexer.StopSpindexer());
   }
 }

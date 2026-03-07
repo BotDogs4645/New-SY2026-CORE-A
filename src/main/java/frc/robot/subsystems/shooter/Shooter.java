@@ -19,7 +19,6 @@ public class Shooter extends FullSubsystem {
   private final ShooterIOOutputs outputs = new ShooterIOOutputs();
 
   private double shooterGoalSpeedRadPerSec = 0.0;
-  private double kickerGoalSpeedRadPerSec = 0.0;
   private boolean atGoalSpeed = false;
   private int prevShotCounter = 0;
   private int shotCounter = 0;
@@ -43,7 +42,6 @@ public class Shooter extends FullSubsystem {
   @Override
   public void periodicAfterScheduler() {
     Logger.recordOutput("Shooter/shooterVelocityRadPerSec", shooterGoalSpeedRadPerSec);
-    Logger.recordOutput("Shooter/kickerVelocityRadPerSec", kickerGoalSpeedRadPerSec);
     if (shooterGoalSpeedRadPerSec == 0.0) {
       outputs.shooterMode = ShooterOutputMode.BRAKE;
       outputs.shooterGoalSpeedRadPerSec = 0.0;
@@ -68,24 +66,11 @@ public class Shooter extends FullSubsystem {
       }
     }
 
-    if (kickerGoalSpeedRadPerSec == 0.0) {
-      outputs.kickerMode = ShooterOutputMode.BRAKE;
-      outputs.kickerGoalSpeedRadPerSec = 0.0;
-      atGoalSpeed = false;
-    } else {
-      outputs.kickerMode = ShooterOutputMode.CLOSED_LOOP;
-      outputs.kickerGoalSpeedRadPerSec = kickerGoalSpeedRadPerSec;
-    }
-
     io.applyOutputs(outputs);
   }
 
   public void setShooterGoalSpeedRadPerSec(double speedRadPerSec) {
     shooterGoalSpeedRadPerSec = speedRadPerSec;
-  }
-
-  public void setKickerGoalSpeedRadPerSec(double speedRadPerSec) {
-    kickerGoalSpeedRadPerSec = speedRadPerSec;
   }
 
   public Trigger shotDetectedTrigger() {
@@ -100,41 +85,20 @@ public class Shooter extends FullSubsystem {
   public Command StopShooter() {
     return runOnce(
         () -> {
-          setKickerGoalSpeedRadPerSec(0.0);
           setShooterGoalSpeedRadPerSec(0.0);
         });
   }
 
   public Command RunShooter() {
     return startEnd(
-        () -> setShooterGoalSpeedRadPerSec(ShooterConstants.shooterDefaultSpeedRadPerSec),
+        () -> setShooterGoalSpeedRadPerSec(ShooterConstants.defaultSpeedRadPerSec),
         () -> setShooterGoalSpeedRadPerSec(0));
-  }
-
-  public Command RunKicker() {
-    return startEnd(
-        () -> setKickerGoalSpeedRadPerSec(ShooterConstants.kickerDefaultSpeedRadPerSec),
-        () -> setKickerGoalSpeedRadPerSec(0));
   }
 
   public Command StartShooter() {
     return runOnce(
         () -> {
-          setShooterGoalSpeedRadPerSec(ShooterConstants.shooterDefaultSpeedRadPerSec);
-        });
-  }
-
-  public Command StartKicker() {
-    return runOnce(
-        () -> {
-          setKickerGoalSpeedRadPerSec(ShooterConstants.kickerDefaultSpeedRadPerSec);
-        });
-  }
-
-  public Command StopKicker() {
-    return runOnce(
-        () -> {
-          setKickerGoalSpeedRadPerSec(0);
+          setShooterGoalSpeedRadPerSec(ShooterConstants.defaultSpeedRadPerSec);
         });
   }
 }

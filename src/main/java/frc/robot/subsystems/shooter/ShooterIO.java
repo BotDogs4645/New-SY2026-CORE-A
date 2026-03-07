@@ -9,10 +9,6 @@ public interface ShooterIO {
     public double shooterVelocityRadPerSec = 0.0;
     public double shooterSupplyCurrent = 0.0;
     public double shooterAppliedVoltage = 0.0;
-
-    public double kickerVelocityRadPerSec = 0.0;
-    public double kickerSupplyCurrent = 0.0;
-    public double kickerAppliedVoltage = 0.0;
   }
 
   public default void updateInputs(ShooterIOInputs inputs) {}
@@ -30,7 +26,5 @@ public interface ShooterIO {
   class ShooterIOOutputs {
     public ShooterOutputMode shooterMode = ShooterOutputMode.COAST;
     public double shooterGoalSpeedRadPerSec = 0.0;
-    public ShooterOutputMode kickerMode = ShooterOutputMode.COAST;
-    public double kickerGoalSpeedRadPerSec = 0.0;
   }
 }
