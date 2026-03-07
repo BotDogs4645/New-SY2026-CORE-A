@@ -44,14 +44,14 @@ public class TurretIOTalonFX implements TurretIO {
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = TurretConstants.motionMagicCruiseVelocity;
     motorConfig.MotionMagic.MotionMagicAcceleration = TurretConstants.motionMagicAcceleration;
 
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = TurretConstants.forwardLimit;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.radiansToRotations(TurretConstants.hardForwardLimit);
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = TurretConstants.reverseLimit;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.radiansToRotations(TurretConstants.hardReverseLimit);
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     motorConfig.Slot0.kP = TurretConstants.kP;
     motorConfig.Slot0.kD = TurretConstants.kD;
@@ -59,7 +59,7 @@ public class TurretIOTalonFX implements TurretIO {
     motorConfig.Slot0.kS = TurretConstants.kS;
 
     tryUntilOk(5, () -> turretMotor.getConfigurator().apply(motorConfig, 0.25));
-    turretMotor.setPosition(0);
+    turretMotor.setPosition(Units.radiansToRotations(TurretConstants.encoderStartingPosition));
 
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(turretMotor);
