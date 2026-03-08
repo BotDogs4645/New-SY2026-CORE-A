@@ -23,4 +23,7 @@ public final class TurretConstants {
   public static final double hardForwardLimit = 8.733;
 
   public static final double gearRatio = 3.2959;
+
+  public static final double turretXOffsetMeters = 0.0;
+  public static final double turretZOffsetMeters = 0.5;
 }

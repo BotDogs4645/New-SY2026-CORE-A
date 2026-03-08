@@ -11,4 +11,6 @@ public final class ShooterConstants {
 
   // not yet implemented (amps)
   public static final double supplyCurrentLimit = 1000;
+
+  public static final double shooterWheelRadiusMeters = 0.03;
 }

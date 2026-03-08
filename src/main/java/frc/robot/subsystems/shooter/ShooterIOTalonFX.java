@@ -31,27 +31,24 @@ public class ShooterIOTalonFX implements ShooterIO {
 
   public ShooterIOTalonFX() {
     var shooterConfig = new TalonFXConfiguration();
-    shooterConfig.MotorOutput.Inverted = ShooterConstants.motorInverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+    shooterConfig.MotorOutput.Inverted =
+        ShooterConstants.motorInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
     shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     shooterConfig.Slot0.kV = 0.118;
     shooterConfig.Slot0.kP = 0.08;
     tryUntilOk(5, () -> shooterMotor.getConfigurator().apply(shooterConfig, 0.25));
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        50.0,
-        shooterSupplyCurrent,
-        shooterVelocityRotPerSec,
-        shooterVoltage);
+        50.0, shooterSupplyCurrent, shooterVelocityRotPerSec, shooterVoltage);
     ParentDevice.optimizeBusUtilizationForAll(shooterMotor);
     Logger.recordOutput("Shooter/talonFXInitialized", true);
   }
 
   @Override
   public void updateInputs(ShooterIOInputs inputs) {
-    BaseStatusSignal.refreshAll(
-        shooterSupplyCurrent,
-        shooterVelocityRotPerSec,
-        shooterVoltage);
+    BaseStatusSignal.refreshAll(shooterSupplyCurrent, shooterVelocityRotPerSec, shooterVoltage);
 
     inputs.shooterSupplyCurrent = shooterSupplyCurrent.getValueAsDouble();
     inputs.shooterVelocityRadPerSec =
@@ -72,7 +69,7 @@ public class ShooterIOTalonFX implements ShooterIO {
 
       case COAST:
         shooterMotor.setControl(coastRequest);
-      
+
       case CLOSED_LOOP:
         double targetRotPerSec = Units.radiansToRotations(outputs.shooterGoalSpeedRadPerSec);
         shooterMotor.setControl(shooterVelocityRequest.withVelocity(targetRotPerSec));

@@ -10,7 +10,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.FieldPoses;
+import frc.robot.FieldConstants;
 import frc.robot.subsystems.hood.HoodIO.HoodIOOutputs;
 import frc.robot.subsystems.hood.HoodIO.HoodOutputMode;
 import frc.robot.util.FullSubsystem;
@@ -109,7 +109,7 @@ public class Hood extends FullSubsystem {
   }
 
   public Command followHub(Supplier<Pose2d> currentPoseSupplier) {
-    return followTargetPosition(currentPoseSupplier, FieldPoses.HUB);
+    return followTargetPosition(currentPoseSupplier, FieldConstants.Hub.centerPose2d);
   }
 
   public Command followTargetPosition(Supplier<Pose2d> currentPoseSupplier, Pose2d targetPose) {

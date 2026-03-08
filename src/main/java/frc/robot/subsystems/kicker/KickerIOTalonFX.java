@@ -31,27 +31,24 @@ public class KickerIOTalonFX implements KickerIO {
 
   public KickerIOTalonFX() {
     var kickerConfig = new TalonFXConfiguration();
-    kickerConfig.MotorOutput.Inverted = KickerConstants.motorInverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+    kickerConfig.MotorOutput.Inverted =
+        KickerConstants.motorInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
     kickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kickerConfig.Slot0.kV = KickerConstants.kV;
     kickerConfig.Slot0.kP = KickerConstants.kP;
     tryUntilOk(5, () -> kickerMotor.getConfigurator().apply(kickerConfig, 0.25));
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        50.0,
-        kickerSupplyCurrent,
-        kickerVelocityRotPerSec,
-        kickerVoltage);
+        50.0, kickerSupplyCurrent, kickerVelocityRotPerSec, kickerVoltage);
     ParentDevice.optimizeBusUtilizationForAll(kickerMotor);
     Logger.recordOutput("Kicker/talonFXInitialized", true);
   }
 
   @Override
   public void updateInputs(KickerIOInputs inputs) {
-    BaseStatusSignal.refreshAll(
-        kickerSupplyCurrent,
-        kickerVelocityRotPerSec,
-        kickerVoltage);
+    BaseStatusSignal.refreshAll(kickerSupplyCurrent, kickerVelocityRotPerSec, kickerVoltage);
 
     inputs.kickerSupplyCurrent = kickerSupplyCurrent.getValueAsDouble();
     inputs.kickerVelocityRadPerSec =
@@ -66,7 +63,7 @@ public class KickerIOTalonFX implements KickerIO {
 
   @Override
   public void applyOutputs(KickerIOOutputs outputs) {
-    switch(outputs.kickerMode) {
+    switch (outputs.kickerMode) {
       case BRAKE:
         kickerMotor.setControl(brakeRequest);
 

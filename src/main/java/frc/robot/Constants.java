@@ -21,6 +21,15 @@ public final class Constants {
   public static final double fieldWidth = 16.5409;
   public static final double fieldLength = 8.0693;
 
+  // tuning mode - enables dashboard-tunable values
+  public static final boolean tuningMode = false;
+
+  public static boolean disableHAL = false;
+
+  public static void disableHAL() {
+    disableHAL = true;
+  }
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,

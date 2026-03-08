@@ -10,8 +10,12 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -41,6 +45,9 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
+import frc.robot.util.AutoShotCalculator;
+import frc.robot.util.Elastic;
+import frc.robot.util.ElasticNotifications;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -68,12 +75,20 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController driveController = new CommandXboxController(0);
   private final CommandJoystick operatorPanel = new CommandJoystick(1);
+  private final Field2d m_field = new Field2d();
+
+  private final AutoShotCalculator shotCalculator;
+  private AutoShotCalculator.ShotSolution latestSolution = AutoShotCalculator.ShotSolution.none();
+
+  // private final Trigger isUnableToShoot = new
+  // Trigger(shotCalculator::isUnableToShoot);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -144,6 +159,8 @@ public class RobotContainer {
     intake = new Intake(new IntakeIOTalonFX());
     leds = new Leds();
 
+    shotCalculator = new AutoShotCalculator(turret);
+
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -162,6 +179,8 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+    SmartDashboard.putData("Field", m_field);
 
     // Configure the button bindings
     configureButtonBindings();
@@ -183,14 +202,14 @@ public class RobotContainer {
             () -> -driveController.getRightX()));
 
     // Lock to 0° when A button is held
-    driveController
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driveController.getLeftY(),
-                () -> -driveController.getLeftX(),
-                () -> Rotation2d.kZero));
+    // driveController
+    // .a()
+    // .whileTrue(
+    // DriveCommands.joystickDriveAtAngle(
+    // drive,
+    // () -> -driveController.getLeftY(),
+    // () -> -driveController.getLeftX(),
+    // () -> Rotation2d.kZero));
 
     // Reset gyro to 0° when B button is pressed
     driveController
@@ -206,10 +225,42 @@ public class RobotContainer {
     // operatorPanel.button(7).onTrue(intake.ExtendIntake());
     // operatorPanel.button(6).whileTrue(OldShootBalls());
     // operatorPanel.button(10).whileTrue(intake.RunIntake());
-
     // driveController.leftBumper().onTrue(intake.ExtendIntake());
     driveController.leftTrigger().whileTrue(intake.RunIntake(driveController.leftTrigger()));
-    driveController.rightBumper().whileTrue(turret.followHub(drive::getPose));
+    driveController
+        .rightBumper()
+        .whileTrue(turret.followHub(drive::getPose, drive::getChassisSpeeds));
+
+    driveController
+        .a()
+        .whileTrue(
+            Commands.runEnd(
+                    () -> {
+                      Translation3d target = getHubTarget();
+                      latestSolution =
+                          shotCalculator.calculate(
+                              drive.getPose(), drive.getChassisSpeeds(), target);
+                      if (latestSolution.isSolutionFound()) {
+
+                      } else {
+                        switch (latestSolution.constrainingFactor()) {
+                          case TURRET_RANGE:
+                            Elastic.sendNotification(
+                                ElasticNotifications.AutoShot.turretCannotReach);
+                          case LOCATION:
+                            ElasticNotifications.AutoShot.outOfBoundsAlert.set(true);
+                            Elastic.sendNotification(ElasticNotifications.AutoShot.outOfBounds);
+                        }
+                      }
+                    },
+                    () -> {
+                      ElasticNotifications.AutoShot.outOfBoundsAlert.set(false);
+                      Elastic.removeNotification(ElasticNotifications.AutoShot.turretCannotReach);
+                      Elastic.removeNotification(ElasticNotifications.AutoShot.outOfBounds);
+                    },
+                    turret,
+                    hood)
+                .withName("AutoAim"));
 
     // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose));
     // driveController.rightTrigger().onTrue(leds.BlinkLEDs());
@@ -243,7 +294,13 @@ public class RobotContainer {
   }
 
   public Command StopShooting() {
-    return Commands.parallel(
-        shooter.StopShooter(), kicker.StopKicker(), spindexer.StopSpindexer());
+    return Commands.parallel(shooter.StopShooter(), kicker.StopKicker(), spindexer.StopSpindexer());
+  }
+
+  private Translation3d getHubTarget() {
+    boolean isRed =
+        DriverStation.getAlliance().isPresent()
+            && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+    return isRed ? FieldConstants.Hub.oppTopCenterPoint : FieldConstants.Hub.topCenterPoint;
   }
 }

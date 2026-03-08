@@ -1,16 +1,11 @@
 package frc.robot.subsystems.turret;
 
-import static edu.wpi.first.units.Units.Rotation;
 import static frc.robot.util.PhoenixUtil.*;
-
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
@@ -18,21 +13,21 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import org.littletonrobotics.junction.Logger;
 
 public class TurretIOTalonFX implements TurretIO {
-  private final TalonFX turretMotor = new TalonFX(TurretConstants.motorCanId, TurretConstants.motorCanBus);
+  private final TalonFX turretMotor =
+      new TalonFX(TurretConstants.motorCanId, TurretConstants.motorCanBus);
 
   private final StatusSignal<Current> supplyCurrent = turretMotor.getSupplyCurrent();
   private final StatusSignal<Angle> positionRot = turretMotor.getPosition();
   private final StatusSignal<AngularVelocity> velocityRotPerSec = turretMotor.getVelocity();
   private final StatusSignal<ControlModeValue> activeControl = turretMotor.getControlMode();
-
 
   private final NeutralOut brakeRequest = new NeutralOut();
   private final CoastOut coastRequest = new CoastOut();
@@ -44,10 +39,12 @@ public class TurretIOTalonFX implements TurretIO {
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = TurretConstants.motionMagicCruiseVelocity;
     motorConfig.MotionMagic.MotionMagicAcceleration = TurretConstants.motionMagicAcceleration;
 
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.radiansToRotations(TurretConstants.hardForwardLimit);
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        Units.radiansToRotations(TurretConstants.hardForwardLimit);
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
 
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.radiansToRotations(TurretConstants.hardReverseLimit);
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        Units.radiansToRotations(TurretConstants.hardReverseLimit);
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -94,8 +91,9 @@ public class TurretIOTalonFX implements TurretIO {
   }
 
   public double convertToTurretPosition(double angleRad) {
-    Rotation2d withInitialPos = Rotation2d.fromRadians(angleRad).minus(new Rotation2d(TurretConstants.physicalStartingPosition));
+    Rotation2d withInitialPos =
+        Rotation2d.fromRadians(angleRad)
+            .minus(new Rotation2d(TurretConstants.physicalStartingPosition));
     return withInitialPos.getRotations() * TurretConstants.gearRatio;
   }
-
 }
