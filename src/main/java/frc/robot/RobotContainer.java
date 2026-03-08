@@ -45,15 +45,19 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
+import frc.robot.util.Alerts;
 import frc.robot.util.AutoShotCalculator;
 import frc.robot.util.Elastic;
-import frc.robot.util.ElasticNotifications;
+import frc.robot.util.Alerts;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
@@ -86,7 +90,9 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
 
     switch (Constants.currentMode) {
@@ -94,13 +100,12 @@ public class RobotContainer {
         // Real robot, instantiate hardware IO implementations
         // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
         // a CANcoder
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
+        drive = new Drive(
+            new GyroIOPigeon2(),
+            new ModuleIOTalonFX(TunerConstants.FrontLeft),
+            new ModuleIOTalonFX(TunerConstants.FrontRight),
+            new ModuleIOTalonFX(TunerConstants.BackLeft),
+            new ModuleIOTalonFX(TunerConstants.BackRight));
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -123,24 +128,28 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIOSim(TunerConstants.FrontLeft),
+            new ModuleIOSim(TunerConstants.FrontRight),
+            new ModuleIOSim(TunerConstants.BackLeft),
+            new ModuleIOSim(TunerConstants.BackRight));
         break;
 
       default:
         // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            });
         break;
     }
 
@@ -187,9 +196,11 @@ public class RobotContainer {
   }
 
   /**
-   * Use this method to define your button->command mappings. Buttons can be created by
+   * Use this method to define your button->command mappings. Buttons can be
+   * created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+   * it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
@@ -216,10 +227,9 @@ public class RobotContainer {
         .b()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
+                () -> drive.setPose(
+                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                drive)
                 .ignoringDisable(true));
 
     // operatorPanel.button(7).onTrue(intake.ExtendIntake());
@@ -235,31 +245,28 @@ public class RobotContainer {
         .a()
         .whileTrue(
             Commands.runEnd(
-                    () -> {
-                      Translation3d target = getHubTarget();
-                      latestSolution =
-                          shotCalculator.calculate(
-                              drive.getPose(), drive.getChassisSpeeds(), target);
-                      if (latestSolution.isSolutionFound()) {
-
-                      } else {
-                        switch (latestSolution.constrainingFactor()) {
-                          case TURRET_RANGE:
-                            Elastic.sendNotification(
-                                ElasticNotifications.AutoShot.turretCannotReach);
-                          case LOCATION:
-                            ElasticNotifications.AutoShot.outOfBoundsAlert.set(true);
-                            Elastic.sendNotification(ElasticNotifications.AutoShot.outOfBounds);
-                        }
-                      }
-                    },
-                    () -> {
-                      ElasticNotifications.AutoShot.outOfBoundsAlert.set(false);
-                      Elastic.removeNotification(ElasticNotifications.AutoShot.turretCannotReach);
-                      Elastic.removeNotification(ElasticNotifications.AutoShot.outOfBounds);
-                    },
-                    turret,
-                    hood)
+                () -> {
+                  Translation3d target = getHubTarget();
+                  latestSolution = shotCalculator.calculate(
+                      drive.getPose(), drive.getChassisSpeeds(), target);
+                  if (latestSolution.isSolutionFound()) {
+                    Alerts.AutoShot.outOfBoundsAlert.set(false);
+                    Alerts.AutoShot.turretCannotReachAlert.set(false);
+                  } else {
+                    switch (latestSolution.constrainingFactor()) {
+                      case TURRET_RANGE:
+                        Alerts.AutoShot.turretCannotReachAlert.set(true);
+                      case LOCATION:
+                        Alerts.AutoShot.outOfBoundsAlert.set(true);
+                    }
+                  }
+                },
+                () -> {
+                  Alerts.AutoShot.outOfBoundsAlert.set(false);
+                  Alerts.AutoShot.turretCannotReachAlert.set(false);
+                },
+                turret,
+                hood)
                 .withName("AutoAim"));
 
     // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose));
@@ -285,10 +292,10 @@ public class RobotContainer {
 
   public Command OldShootBalls() {
     return new SequentialCommandGroup(
-            shooter.StartShooter(),
-            new WaitCommand(0.2),
-            kicker.StartKicker(),
-            spindexer.StartSpindexer())
+        shooter.StartShooter(),
+        new WaitCommand(0.2),
+        kicker.StartKicker(),
+        spindexer.StartSpindexer())
         .andThen(Commands.idle())
         .finallyDo(() -> CommandScheduler.getInstance().schedule(StopShooting()));
   }
@@ -298,9 +305,8 @@ public class RobotContainer {
   }
 
   private Translation3d getHubTarget() {
-    boolean isRed =
-        DriverStation.getAlliance().isPresent()
-            && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+    boolean isRed = DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
     return isRed ? FieldConstants.Hub.oppTopCenterPoint : FieldConstants.Hub.topCenterPoint;
   }
 }
