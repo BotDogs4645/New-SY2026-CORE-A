@@ -238,10 +238,7 @@ public class RobotContainer {
                       Translation3d target = getHubTarget();
                       latestSolution =
                           shotCalculator.calculate(
-                              drive.getPose(),
-                              drive.getChassisSpeeds(),
-                              target,
-                              hood.getCurrentHoodRotation());
+                              drive.getPose(), drive.getChassisSpeeds(), target, hood.getCurrentHoodRotation());
                       if (latestSolution.isSolutionFound()) {
                         Alerts.AutoShot.outOfBoundsAlert.set(false);
                         Alerts.AutoShot.turretCannotReachAlert.set(false);
