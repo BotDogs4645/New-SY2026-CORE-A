@@ -2,6 +2,7 @@ package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -74,7 +75,9 @@ public class AutoShotCalculator {
 
   // speed limit
   private static final LoggedTunableNumber maxLaunchSpeedMps =
-      new LoggedTunableNumber("AutoShot/maxLaunchSpeedMps", 50.0);
+      new LoggedTunableNumber("AutoShot/maxLaunchSpeedMps", 12);
+  private static final LoggedTunableNumber minLaunchSpeedMps =
+      new LoggedTunableNumber("AutoShot/minLaunchSpeedMps", 5);
 
   // trajectory visualization
   private static final int TRAJECTORY_LINE_POINTS = 50;
@@ -100,7 +103,10 @@ public class AutoShotCalculator {
    * @return a ShotSolution with turret angle, hood angle, flywheel speed, and validity
    */
   public ShotSolution calculate(
-      Pose2d robotPose, ChassisSpeeds robotRelativeSpeeds, Translation3d targetPosition) {
+      Pose2d robotPose,
+      ChassisSpeeds robotRelativeSpeeds,
+      Translation3d targetPosition,
+      Rotation2d currentHoodRotation) {
 
     // ensure robot is on correct side
     Optional<Alliance> driverStationAlliance = DriverStation.getAlliance();
@@ -165,12 +171,12 @@ public class AutoShotCalculator {
     double stepRad = Units.degreesToRadians(angleStepDeg.get());
 
     ShotSolution bestSolution = ShotSolution.none();
-    double minFoundSpeed = Double.POSITIVE_INFINITY;
+    double rotationNeeded = Double.POSITIVE_INFINITY;
     for (double pitchRad = minAngleRad; pitchRad <= maxAngleRad; pitchRad += stepRad) {
       double speed = solveForSpeed(pitchRad, effectiveDist, targetHeight);
-      if (speed > 0.0 && speed <= maxLaunchSpeedMps.get()) {
-        if (speed < minFoundSpeed) {
-          minFoundSpeed = speed;
+      if (speed > 0.0) {
+        if (Math.abs(pitchRad - currentHoodRotation.getRadians()) < rotationNeeded) {
+          rotationNeeded = Math.abs(pitchRad - currentHoodRotation.getRadians());
           double flywheelRadPerSec = exitSpeedToFlywheelVelocity(speed);
           bestSolution =
               new ShotSolution(
@@ -287,32 +293,20 @@ public class AutoShotCalculator {
    * @return required launch speed in m/s, or -1 if no valid speed found
    */
   private double solveForSpeed(double pitchRad, double targetDistance, double targetHeight) {
-    double lo = 1.0;
+    double lo = minLaunchSpeedMps.get();
     double hi = maxLaunchSpeedMps.get();
 
-    // check if solution is even possible at max speed
     double maxDist = simulateTrajectory(hi, pitchRad, targetHeight);
-    if (maxDist < targetDistance) {
-      return -1.0;
+    if (Math.abs(maxDist - targetDistance) <= 0.05) {
+      return hi;
     }
 
-    for (int i = 0; i < BINARY_SEARCH_ITERATIONS; i++) {
-      double mid = (lo + hi) / 2.0;
-      double dist = simulateTrajectory(mid, pitchRad, targetHeight);
-      if (dist < 0 || dist < targetDistance) {
-        lo = mid;
-      } else {
-        hi = mid;
-      }
+    double minDist = simulateTrajectory(lo, pitchRad, targetHeight);
+    if (Math.abs(minDist - targetDistance) <= 0.05) {
+      return lo;
     }
 
-    // verify solution is close enough (within 5cm)
-    double finalDist = simulateTrajectory((lo + hi) / 2.0, pitchRad, targetHeight);
-    if (Math.abs(finalDist - targetDistance) > 0.05) {
-      return -1.0;
-    }
-
-    return (lo + hi) / 2.0;
+    return -1;
   }
 
   /**
