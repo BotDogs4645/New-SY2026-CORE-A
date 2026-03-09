@@ -67,17 +67,17 @@ public class AutoShotCalculator {
 
   // angle sweep
   private static final LoggedTunableNumber minLaunchAngleDeg =
-      new LoggedTunableNumber("AutoShot/minLaunchAngleDeg", 20.0);
+      new LoggedTunableNumber("AutoShot/minLaunchAngleDeg", 0);
   private static final LoggedTunableNumber maxLaunchAngleDeg =
-      new LoggedTunableNumber("AutoShot/maxLaunchAngleDeg", 60.0);
+      new LoggedTunableNumber("AutoShot/maxLaunchAngleDeg", 86);
   private static final LoggedTunableNumber angleStepDeg =
-      new LoggedTunableNumber("AutoShot/angleStepDeg", 1);
+      new LoggedTunableNumber("AutoShot/angleStepDeg", 0.1);
 
   // speed limit
   private static final LoggedTunableNumber maxLaunchSpeedMps =
       new LoggedTunableNumber("AutoShot/maxLaunchSpeedMps", 12);
   private static final LoggedTunableNumber minLaunchSpeedMps =
-      new LoggedTunableNumber("AutoShot/minLaunchSpeedMps", 5);
+      new LoggedTunableNumber("AutoShot/minLaunchSpeedMps", 8);
 
   // trajectory visualization
   private static final int TRAJECTORY_LINE_POINTS = 50;
@@ -297,12 +297,12 @@ public class AutoShotCalculator {
     double hi = maxLaunchSpeedMps.get();
 
     double maxDist = simulateTrajectory(hi, pitchRad, targetHeight);
-    if (Math.abs(maxDist - targetDistance) <= 0.05) {
+    if (Math.abs(maxDist - targetDistance) <= 0.50) {
       return hi;
     }
 
     double minDist = simulateTrajectory(lo, pitchRad, targetHeight);
-    if (Math.abs(minDist - targetDistance) <= 0.05) {
+    if (Math.abs(minDist - targetDistance) <= 0.50) {
       return lo;
     }
 
