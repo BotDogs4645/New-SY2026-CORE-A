@@ -183,4 +183,7 @@ public class Hood extends FullSubsystem {
     return optimalSensorRot;
   }
 
+  public Rotation2d getCurrentHoodRotation() {
+    return new Rotation2d(inputs.positionRad);
+  }
 }
