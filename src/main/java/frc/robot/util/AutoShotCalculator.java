@@ -69,7 +69,7 @@ public class AutoShotCalculator {
   private static final LoggedTunableNumber minLaunchAngleDeg =
       new LoggedTunableNumber("AutoShot/minLaunchAngleDeg", 0);
   private static final LoggedTunableNumber maxLaunchAngleDeg =
-      new LoggedTunableNumber("AutoShot/maxLaunchAngleDeg", 86);
+      new LoggedTunableNumber("AutoShot/maxLaunchAngleDeg", 90);
   private static final LoggedTunableNumber angleStepDeg =
       new LoggedTunableNumber("AutoShot/angleStepDeg", 0.1);
 
@@ -297,12 +297,12 @@ public class AutoShotCalculator {
     double hi = maxLaunchSpeedMps.get();
 
     double maxDist = simulateTrajectory(hi, pitchRad, targetHeight);
-    if (Math.abs(maxDist - targetDistance) <= 0.50) {
+    if (Math.abs(maxDist - targetDistance) <= 0.15) {
       return hi;
     }
 
     double minDist = simulateTrajectory(lo, pitchRad, targetHeight);
-    if (Math.abs(minDist - targetDistance) <= 0.50) {
+    if (Math.abs(minDist - targetDistance) <= 0.15) {
       return lo;
     }
 

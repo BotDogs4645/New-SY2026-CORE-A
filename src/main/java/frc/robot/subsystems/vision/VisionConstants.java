@@ -29,10 +29,10 @@ public class VisionConstants {
 
   public static final Transform3d robotToQuestTransform =
       new Transform3d(
-          0.0,
-          0.0,
-          0.5, // x, y, z offset from robot center (meters)
-          new Rotation3d(0.0, 0.0, 0.0) // roll, pitch, yaw
+          -0.2794,
+          -0.2667,
+          0.2032, // x, y, z offset from robot center (meters)
+          new Rotation3d(0.0, 0.0, (Math.PI * 5) / 4) // roll, pitch, yaw
           );
 
   // Basic filtering thresholds

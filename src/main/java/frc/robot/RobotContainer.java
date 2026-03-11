@@ -45,6 +45,10 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionConstants;
+import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.Alerts;
 import frc.robot.util.AutoShotCalculator;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -67,9 +71,9 @@ public class RobotContainer {
   private final Leds leds;
 
   // vision systemns
-  // private final Vision vision;
-  // private final VisionIOQuestNav questNavIO;
-  // private final VisionIOLimelight limelightIO;
+  private final Vision vision;
+  private final VisionIOQuestNav questNavIO;
+  private final VisionIOLimelight limelightIO;
 
   // Controller
   private final CommandXboxController driveController = new CommandXboxController(0);
@@ -144,10 +148,9 @@ public class RobotContainer {
     }
 
     // vision instantiation
-    // questNavIO = new VisionIOQuestNav();
-    // limelightIO = new VisionIOLimelight(VisionConstants.limelightName,
-    // drive::getRotation);
-    // vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
+    questNavIO = new VisionIOQuestNav("questnav-br");
+    limelightIO = new VisionIOLimelight(VisionConstants.limelightName, drive::getRotation);
+    vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
 
     // subsystems
     turret = new Turret(new TurretIOTalonFX());
@@ -231,6 +234,14 @@ public class RobotContainer {
         .whileTrue(turret.followHub(drive::getPose, drive::getChassisSpeeds));
 
     driveController
+        .y()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  questNavIO.resetToZero();
+                }));
+
+    driveController
         .a()
         .whileTrue(
             Commands.runEnd(
@@ -238,10 +249,14 @@ public class RobotContainer {
                       Translation3d target = getHubTarget();
                       latestSolution =
                           shotCalculator.calculate(
-                              drive.getPose(), drive.getChassisSpeeds(), target, hood.getCurrentHoodRotation());
+                              drive.getPose(),
+                              drive.getChassisSpeeds(),
+                              target,
+                              hood.getCurrentHoodRotation());
                       if (latestSolution.isSolutionFound()) {
                         Alerts.AutoShot.outOfBoundsAlert.set(false);
                         Alerts.AutoShot.turretCannotReachAlert.set(false);
+                        turret.setGoalPositionRad(latestSolution.turretAngleRad());
                       } else {
                         switch (latestSolution.constrainingFactor()) {
                           case TURRET_RANGE:
@@ -259,7 +274,7 @@ public class RobotContainer {
                     hood)
                 .withName("AutoAim"));
 
-    // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose));
+    // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose, drive.));
     // driveController.rightTrigger().onTrue(leds.BlinkLEDs());
   }
 

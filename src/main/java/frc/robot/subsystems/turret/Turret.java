@@ -50,17 +50,19 @@ public class Turret extends FullSubsystem {
   @Override
   public void periodicAfterScheduler() {
     Logger.recordOutput("Turret/goalPositionRad", goalPositionRad);
+    Logger.recordOutput("Turret/ouputMode", outputMode);
     outputs.mode = outputMode;
     outputs.goalPositionRad = goalPositionRad;
+    io.applyOutputs(outputs);
   }
 
-  private void setGoalPositionRad(double positionRad) {
-    outputs.mode = TurretOutputMode.POSITION;
+  public void setGoalPositionRad(double positionRad) {
+    outputMode = TurretOutputMode.POSITION;
     goalPositionRad = positionRad;
   }
 
   private void setMotorBrake() {
-    outputs.mode = TurretOutputMode.BRAKE;
+    outputMode = TurretOutputMode.BRAKE;
   }
 
   public Command followHub(
