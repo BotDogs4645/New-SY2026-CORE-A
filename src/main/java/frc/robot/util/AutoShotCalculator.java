@@ -68,7 +68,7 @@ public class AutoShotCalculator {
   private static final LoggedTunableNumber minLaunchAngleDeg =
       new LoggedTunableNumber("AutoShot/minLaunchAngleDeg", 0);
   private static final LoggedTunableNumber maxLaunchAngleDeg =
-      new LoggedTunableNumber("AutoShot/maxLaunchAngleDeg", 86);
+      new LoggedTunableNumber("AutoShot/maxLaunchAngleDeg", 90);
   private static final LoggedTunableNumber angleStepDeg =
       new LoggedTunableNumber("AutoShot/angleStepDeg", 0.1);
 
