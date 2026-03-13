@@ -22,7 +22,7 @@ public final class Constants {
   public static final double fieldLength = 8.0693;
 
   // tuning mode - enables dashboard-tunable values
-  public static final boolean tuningMode = false;
+  public static final boolean tuningMode = true;
 
   public static boolean disableHAL = false;
 

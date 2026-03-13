@@ -11,7 +11,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -238,7 +237,10 @@ public class RobotContainer {
                       Translation3d target = getHubTarget();
                       latestSolution =
                           shotCalculator.calculate(
-                              drive.getPose(), drive.getChassisSpeeds(), target, hood.getCurrentHoodRotation());
+                              drive.getPose(),
+                              drive.getChassisSpeeds(),
+                              target,
+                              hood.getCurrentHoodRotation());
                       if (latestSolution.isSolutionFound()) {
                         Alerts.AutoShot.outOfBoundsAlert.set(false);
                         Alerts.AutoShot.turretCannotReachAlert.set(false);
@@ -295,9 +297,10 @@ public class RobotContainer {
   }
 
   private Translation3d getHubTarget() {
-    boolean isRed =
-        DriverStation.getAlliance().isPresent()
-            && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+    // boolean isRed =
+    //     DriverStation.getAlliance().isPresent()
+    //         && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+    boolean isRed = false;
     return isRed ? FieldConstants.Hub.oppTopCenterPoint : FieldConstants.Hub.topCenterPoint;
   }
 }

@@ -7,7 +7,6 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.FieldConstants;
 import frc.robot.subsystems.shooter.ShooterConstants;
@@ -75,9 +74,22 @@ public class AutoShotCalculator {
 
   // speed limit
   private static final LoggedTunableNumber maxLaunchSpeedMps =
-      new LoggedTunableNumber("AutoShot/maxLaunchSpeedMps", 12);
+      new LoggedTunableNumber("AutoShot/maxLaunchSpeedMps", 4);
   private static final LoggedTunableNumber minLaunchSpeedMps =
-      new LoggedTunableNumber("AutoShot/minLaunchSpeedMps", 8);
+      new LoggedTunableNumber("AutoShot/minLaunchSpeedMps", 2);
+
+  enum ShooterDistanceCutoff {
+    L1(2, 7),
+    L2(4, 7.5),
+    L3(6, 12),
+    DEFAULT(Double.POSITIVE_INFINITY, 8);
+    final double maxDistance, speedMps;
+
+    ShooterDistanceCutoff(double maxDistance, double speedMps) {
+      this.maxDistance = maxDistance;
+      this.speedMps = speedMps;
+    }
+  }
 
   // trajectory visualization
   private static final int TRAJECTORY_LINE_POINTS = 50;
@@ -109,7 +121,7 @@ public class AutoShotCalculator {
       Rotation2d currentHoodRotation) {
 
     // ensure robot is on correct side
-    Optional<Alliance> driverStationAlliance = DriverStation.getAlliance();
+    Optional<Alliance> driverStationAlliance = Optional.of(Alliance.Blue);
     Alliance currentAllianceSide = FieldConstants.getAllianceSide(robotPose);
     boolean isAtValidPosition =
         !(driverStationAlliance.isPresent() && driverStationAlliance.get() != currentAllianceSide);
@@ -171,12 +183,12 @@ public class AutoShotCalculator {
     double stepRad = Units.degreesToRadians(angleStepDeg.get());
 
     ShotSolution bestSolution = ShotSolution.none();
-    double rotationNeeded = Double.POSITIVE_INFINITY;
+    double lowestAngle = Double.NEGATIVE_INFINITY;
     for (double pitchRad = minAngleRad; pitchRad <= maxAngleRad; pitchRad += stepRad) {
       double speed = solveForSpeed(pitchRad, effectiveDist, targetHeight);
       if (speed > 0.0) {
-        if (Math.abs(pitchRad - currentHoodRotation.getRadians()) < rotationNeeded) {
-          rotationNeeded = Math.abs(pitchRad - currentHoodRotation.getRadians());
+        if (pitchRad > lowestAngle) {
+          lowestAngle = Math.abs(pitchRad - currentHoodRotation.getRadians());
           double flywheelRadPerSec = exitSpeedToFlywheelVelocity(speed);
           bestSolution =
               new ShotSolution(
@@ -293,17 +305,19 @@ public class AutoShotCalculator {
    * @return required launch speed in m/s, or -1 if no valid speed found
    */
   private double solveForSpeed(double pitchRad, double targetDistance, double targetHeight) {
-    double lo = minLaunchSpeedMps.get();
-    double hi = maxLaunchSpeedMps.get();
 
-    double maxDist = simulateTrajectory(hi, pitchRad, targetHeight);
-    if (Math.abs(maxDist - targetDistance) <= 0.50) {
-      return hi;
+    // get the target speed based on distance
+    ShooterDistanceCutoff closestCutoff = ShooterDistanceCutoff.DEFAULT;
+    for (ShooterDistanceCutoff cutoff : ShooterDistanceCutoff.values()) {
+      if (cutoff.maxDistance - targetDistance > 0
+          && (cutoff.maxDistance - targetDistance < closestCutoff.maxDistance - targetDistance)) {
+        closestCutoff = cutoff;
+      }
     }
 
-    double minDist = simulateTrajectory(lo, pitchRad, targetHeight);
-    if (Math.abs(minDist - targetDistance) <= 0.50) {
-      return lo;
+    double maxDist = simulateTrajectory(closestCutoff.speedMps, pitchRad, targetHeight);
+    if (Math.abs(maxDist - targetDistance) <= 0.15) {
+      return closestCutoff.speedMps;
     }
 
     return -1;
