@@ -8,9 +8,12 @@ public final class HoodConstants {
   public static final int thorughboreEncoderId = 19;
   public static final CANBus motorCanBus = new CANBus("CANivore");
 
-  public static final double motionMagicCruiseVelocity = 10;
-  public static final double motionMagicAcceleration = 4;
+  public static final double motionMagicCruiseVelocity = 14;
+  public static final double motionMagicAcceleration = 9;
   public static final double motionMagicJerk = 0.0;
+
+  public static final double fowardSoftLimit = 0.382;
+  public static final double reverseSoftLimit = 0;
 
   // Inches
   public static final double hubHeight = 1.82;

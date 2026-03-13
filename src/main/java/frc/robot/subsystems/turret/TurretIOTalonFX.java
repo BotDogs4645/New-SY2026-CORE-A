@@ -40,11 +40,11 @@ public class TurretIOTalonFX implements TurretIO {
     motorConfig.MotionMagic.MotionMagicAcceleration = TurretConstants.motionMagicAcceleration;
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-        Units.radiansToRotations(TurretConstants.hardForwardLimit);
+        Units.radiansToRotations(TurretConstants.hardForwardLimit * TurretConstants.gearRatio);
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
 
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
-        Units.radiansToRotations(TurretConstants.hardReverseLimit);
+        Units.radiansToRotations(TurretConstants.hardReverseLimit * TurretConstants.gearRatio);
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -56,7 +56,9 @@ public class TurretIOTalonFX implements TurretIO {
     motorConfig.Slot0.kS = TurretConstants.kS;
 
     tryUntilOk(5, () -> turretMotor.getConfigurator().apply(motorConfig, 0.25));
-    turretMotor.setPosition(Units.radiansToRotations(TurretConstants.encoderStartingPosition));
+    turretMotor.setPosition(
+        Units.radiansToRotations(
+            TurretConstants.encoderStartingPosition * TurretConstants.gearRatio));
 
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(turretMotor);
@@ -79,14 +81,17 @@ public class TurretIOTalonFX implements TurretIO {
     switch (outputs.mode) {
       case BRAKE:
         turretMotor.setControl(brakeRequest);
+        break;
 
       case COAST:
         turretMotor.setControl(coastRequest);
+        break;
 
       case POSITION:
         double positionRot = convertToTurretPosition(outputs.goalPositionRad);
         Logger.recordOutput("Turret/IO/goalPositionRot", positionRot);
         turretMotor.setControl(positionRequest.withPosition(positionRot));
+        break;
     }
   }
 

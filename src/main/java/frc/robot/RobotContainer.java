@@ -11,6 +11,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -44,12 +45,11 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
-import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.Alerts;
 import frc.robot.util.AutoShotCalculator;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -70,8 +70,8 @@ public class RobotContainer {
   private final Leds leds;
 
   // vision systemns
-  private final Vision vision;
-  private final VisionIOQuestNav questNavIO;
+  // private final Vision vision;
+  // private final VisionIOQuestNav questNavIO;
   private final VisionIOLimelight limelightIO;
 
   // Controller
@@ -147,9 +147,9 @@ public class RobotContainer {
     }
 
     // vision instantiation
-    questNavIO = new VisionIOQuestNav("questnav-br");
+    // questNavIO = new VisionIOQuestNav();
     limelightIO = new VisionIOLimelight(VisionConstants.limelightName, drive::getRotation);
-    vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
+    // vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
 
     // subsystems
     turret = new Turret(new TurretIOTalonFX());
@@ -232,13 +232,13 @@ public class RobotContainer {
         .rightBumper()
         .whileTrue(turret.followHub(drive::getPose, drive::getChassisSpeeds));
 
-    driveController
-        .y()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  questNavIO.resetToZero();
-                }));
+    // driveController
+    //     .y()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () -> {
+    //               questNavIO.resetToZero();
+    //             }));
 
     driveController
         .a()
@@ -256,6 +256,10 @@ public class RobotContainer {
                         Alerts.AutoShot.outOfBoundsAlert.set(false);
                         Alerts.AutoShot.turretCannotReachAlert.set(false);
                         turret.setGoalPositionRad(latestSolution.turretAngleRad());
+                        Logger.recordOutput(
+                            "Turret/rawTargetPosition",
+                            Units.radiansToRotations(latestSolution.turretAngleRad()));
+                        hood.setGoalPosition((Math.PI / 2) - latestSolution.hoodAngleRad() - 0.065);
                       } else {
                         switch (latestSolution.constrainingFactor()) {
                           case TURRET_RANGE:

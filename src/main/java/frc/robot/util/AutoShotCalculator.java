@@ -140,7 +140,7 @@ public class AutoShotCalculator {
 
     // turret pivot in field coords
     double pivotX = robotX + TurretConstants.turretXOffsetMeters * cosH;
-    double pivotY = robotY + TurretConstants.turretXOffsetMeters * sinH;
+    double pivotY = robotY + TurretConstants.turretYOffsetMeters * sinH;
     double pivotZ = TurretConstants.turretZOffsetMeters;
 
     // 2. Compute 3D delta from pivot to target

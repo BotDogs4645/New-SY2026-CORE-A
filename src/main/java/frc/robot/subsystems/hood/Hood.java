@@ -39,12 +39,13 @@ public class Hood extends FullSubsystem {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
-    Logger.recordOutput("Hood/TargetRot", targetPosition);
-    Logger.recordOutput("Hood/CurrentRot", Units.radiansToRotations(inputs.positionRad));
+    Logger.recordOutput("Hood/TargetRads", targetPosition);
+    Logger.recordOutput("Hood/Currentrads", inputs.positionRad);
   }
 
   public void setTargetPosition(double position) {
     targetPosition = position;
+    outputMode = HoodOutputMode.CLOSED_LOOP;
   }
 
   public void setOutputMode(HoodOutputMode mode) {
@@ -97,6 +98,10 @@ public class Hood extends FullSubsystem {
         () -> {
           setOutputMode(HoodOutputMode.BRAKE);
         });
+  }
+
+  public void setGoalPosition(double goal) {
+    setTargetPosition(goal);
   }
 
   /**

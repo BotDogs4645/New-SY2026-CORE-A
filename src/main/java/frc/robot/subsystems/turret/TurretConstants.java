@@ -17,13 +17,14 @@ public final class TurretConstants {
   public static final double motionMagicJerk = 0.0;
 
   // in full turret radians:
-  public static final double encoderStartingPosition = 0.0;
+  public static final double encoderStartingPosition = -Math.PI;
   public static final double physicalStartingPosition = 0;
-  public static final double hardReverseLimit = -8.733;
-  public static final double hardForwardLimit = 8.733;
+  public static final double hardReverseLimit = -(Math.PI * 3.0) / 2.0;
+  public static final double hardForwardLimit = Math.PI / 2.0;
 
   public static final double gearRatio = 3.2959;
 
-  public static final double turretXOffsetMeters = 0.0;
-  public static final double turretZOffsetMeters = 0.5;
+  public static final double turretXOffsetMeters = 0.22225;
+  public static final double turretYOffsetMeters = 0.483;
+  public static final double turretZOffsetMeters = 0.4445;
 }

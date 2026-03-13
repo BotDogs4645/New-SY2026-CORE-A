@@ -38,7 +38,7 @@ public class Turret extends FullSubsystem {
 
     // zero the encoder when the robot is started - turret should begin in the
     // rightmost position
-    io.setEncoderPosition(TurretConstants.encoderStartingPosition);
+    // io.setEncoderPosition(TurretConstants.encoderStartingPosition * TurretConstants.gearRatio);
   }
 
   @Override

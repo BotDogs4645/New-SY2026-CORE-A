@@ -37,11 +37,18 @@ public class HoodIOTalonFX implements HoodIO {
 
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = HoodConstants.motionMagicCruiseVelocity;
     motorConfig.MotionMagic.MotionMagicAcceleration = HoodConstants.motionMagicAcceleration;
-    motorConfig.Slot0.kP = 7;
+    motorConfig.Slot0.kP = 6.5;
+    motorConfig.Slot0.kI = 1.6;
     motorConfig.Feedback.FeedbackRemoteSensorID = HoodConstants.thorughboreEncoderId;
     motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
-    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = HoodConstants.fowardSoftLimit;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = HoodConstants.reverseSoftLimit;
+
     tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(motorConfig, 0.25));
 
     var encoderConfig = new CANcoderConfiguration();
@@ -69,7 +76,8 @@ public class HoodIOTalonFX implements HoodIO {
     if (outputs.mode == HoodOutputMode.BRAKE) {
       hoodMotor.setControl(brakeControl);
     } else {
-      hoodMotor.setControl(motionMagicPositionCycle.withPosition(outputs.targetPosition));
+      double positionRot = Units.radiansToRotations(outputs.targetPosition);
+      hoodMotor.setControl(motionMagicPositionCycle.withPosition(positionRot));
     }
   }
 }
