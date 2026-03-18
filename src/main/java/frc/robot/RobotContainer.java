@@ -8,6 +8,8 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -165,6 +167,14 @@ public class RobotContainer {
     intake = new Intake(new IntakeIOTalonFX());
     leds = new Leds();
 
+    //named command registration
+    NamedCommands.registerCommand("ExtendIntake", intake.ExtendIntake());
+    NamedCommands.registerCommand("RunIntake", intake.RunIntake(()-> false));
+    NamedCommands.registerCommand("StartIntake", intake.StartIntake());
+    NamedCommands.registerCommand("StopIntake", intake.StopIntake());
+    NamedCommands.registerCommand("AutoAim", AutoAim());
+    NamedCommands.registerCommand("FeedBallsToShooter", FeedBallsToShooter());
+
     shotCalculator = new AutoShotCalculator(turret);
 
     // Set up auto routines
@@ -240,11 +250,7 @@ public class RobotContainer {
 
     driveController
         .leftTrigger()
-        .whileTrue(
-            Commands.parallel(
-                kicker.RunKicker(),
-                Commands.sequence(
-                    Commands.waitUntil(kicker::atGoalSpeed), spindexer.RunSpindexer())));
+        .whileTrue(FeedBallsToShooter());
 
     driveController.y().whileTrue(intake.RunOuttake(driveController.x()));
     // driveController
@@ -257,8 +263,32 @@ public class RobotContainer {
 
     driveController
         .a()
-        .whileTrue(
-            Commands.runEnd(
+        .whileTrue(AutoAim());
+
+    // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose,
+    // drive.));
+    // driveController.rightTrigger().onTrue(leds.BlinkLEDs());
+  }
+
+  /**
+   * Use this to pass the autonomous command to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
+  public Command getAutonomousCommand() {
+    return autoChooser.get();
+  }
+
+  public Command FeedBallsToShooter() {
+    return Commands.parallel(
+                kicker.RunKicker(),
+                Commands.sequence(
+                    Commands.waitUntil(kicker::atGoalSpeed), spindexer.RunSpindexer()));
+
+  }
+
+  public Command AutoAim() {
+    return Commands.runEnd(
                     () -> {
                       Translation3d target = getHubTarget();
                       latestSolution =
@@ -297,20 +327,7 @@ public class RobotContainer {
                       shooter.setShooterGoalSpeedRadPerSec(0);
                     },
                     turret)
-                .withName("AutoAim"));
-
-    // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose,
-    // drive.));
-    // driveController.rightTrigger().onTrue(leds.BlinkLEDs());
-  }
-
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    return autoChooser.get();
+                .withName("AutoAim");
   }
 
   public Command ShootBalls() {
