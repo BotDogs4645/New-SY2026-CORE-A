@@ -8,7 +8,7 @@ public final class KickerConstants {
   public static final CANBus motorCanBus = new CANBus("CANivore");
   public static final boolean motorInverted = true;
 
-  public static final double kV = 0.118;
+  public static final double kV = 0.1205;
   public static final double kP = 0.05;
 
   public static final double defaultSpeedRadPerSec = 300;

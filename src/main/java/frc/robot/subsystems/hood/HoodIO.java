@@ -7,8 +7,9 @@ public interface HoodIO {
   public static class HoodIOInputs {
     public double supplyCurrent = 0.0;
     public double positionRad = 0.0;
+    public double positionRadWithoutOffset = 0.0;
     public double velocityRadPerSec = 0.0;
-    public double startingOffset = 0;
+    public double startingOffsetRad = 0;
     public boolean encoderConnected = false;
     public boolean connected = false;
   }

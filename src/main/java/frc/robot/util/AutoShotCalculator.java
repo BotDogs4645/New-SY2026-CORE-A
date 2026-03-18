@@ -50,15 +50,15 @@ public class AutoShotCalculator {
   private static final LoggedTunableNumber ballDiameterMeters =
       new LoggedTunableNumber("AutoShot/ballDiameterMeters", 0.150114);
   private static final LoggedTunableNumber dragCoefficient =
-      new LoggedTunableNumber("AutoShot/dragCoefficient", 0.5);
+      new LoggedTunableNumber("AutoShot/dragCoefficient", 0.7);
   private static final LoggedTunableNumber airDensityKgPerM3 =
       new LoggedTunableNumber("AutoShot/airDensityKgPerM3", 1.225);
 
   // flywheel
   private static final LoggedTunableNumber flywheelSpeedDropRadPerSec =
-      new LoggedTunableNumber("AutoShot/flywheelSpeedDropRadPerSec", 42.0);
+      new LoggedTunableNumber("AutoShot/flywheelSpeedDropRadPerSec", 43.0);
   private static final LoggedTunableNumber launchEfficiency =
-      new LoggedTunableNumber("AutoShot/launchEfficiency", 0.75);
+      new LoggedTunableNumber("AutoShot/launchEfficiency", 0.975);
 
   // simulation
   private static final LoggedTunableNumber simTimeStepSecs =
@@ -66,11 +66,11 @@ public class AutoShotCalculator {
 
   // angle sweep
   private static final LoggedTunableNumber minLaunchAngleDeg =
-      new LoggedTunableNumber("AutoShot/minLaunchAngleDeg", 0);
+      new LoggedTunableNumber("AutoShot/minLaunchAngleDeg", 40);
   private static final LoggedTunableNumber maxLaunchAngleDeg =
       new LoggedTunableNumber("AutoShot/maxLaunchAngleDeg", 90);
   private static final LoggedTunableNumber angleStepDeg =
-      new LoggedTunableNumber("AutoShot/angleStepDeg", 0.1);
+      new LoggedTunableNumber("AutoShot/angleStepDeg", 0.25);
 
   // speed limit
   private static final LoggedTunableNumber maxLaunchSpeedMps =
@@ -138,14 +138,24 @@ public class AutoShotCalculator {
     double cosH = Math.cos(heading);
     double sinH = Math.sin(heading);
 
+    double hoodX =
+        robotX
+            + TurretConstants.turretXOffsetMeters * cosH
+            - TurretConstants.turretYOffsetMeters * sinH;
+    double hoodY =
+        robotY
+            + TurretConstants.turretYOffsetMeters * sinH
+            + TurretConstants.turretYOffsetMeters * cosH;
+
     // turret pivot in field coords
-    double pivotX = robotX + TurretConstants.turretXOffsetMeters * cosH;
-    double pivotY = robotY + TurretConstants.turretYOffsetMeters * sinH;
+    double pivotX = hoodX;
+    double pivotY = hoodY;
     double pivotZ = TurretConstants.turretZOffsetMeters;
 
+    Logger.recordOutput("AutoShot/hoodPosition", new Pose2d(hoodX, hoodY, new Rotation2d()));
     // 2. Compute 3D delta from pivot to target
-    double dx = targetPosition.getX() - pivotX;
-    double dy = targetPosition.getY() - pivotY;
+    double dx = targetPosition.getX() - hoodX;
+    double dy = targetPosition.getY() - hoodY;
     double dz = targetPosition.getZ() - pivotZ;
 
     // 3. Convert robot-relative speeds to field-relative
@@ -176,6 +186,7 @@ public class AutoShotCalculator {
       Logger.recordOutput("AutoShot/constrainingFactor", ConstrainingFactor.TURRET_RANGE);
       return ShotSolution.none(ConstrainingFactor.TURRET_RANGE);
     }
+    Logger.recordOutput("Turret/autoShotAngleRads", bestTurretAngle.getAsDouble());
 
     // 7. Sweep all launch angles and find the one with the minimum required speed.
     double minAngleRad = Units.degreesToRadians(minLaunchAngleDeg.get());

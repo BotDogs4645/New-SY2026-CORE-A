@@ -39,8 +39,8 @@ public class ShooterIOTalonFX implements ShooterIO {
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
     shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    shooterConfig.Slot0.kV = 0.125;
-    shooterConfig.Slot0.kP = 0.08;
+    shooterConfig.Slot0.kV = 0.1345;
+    shooterConfig.Slot0.kP = 0.085;
     tryUntilOk(5, () -> shooterMotor.getConfigurator().apply(shooterConfig, 0.25));
 
     BaseStatusSignal.setUpdateFrequencyForAll(

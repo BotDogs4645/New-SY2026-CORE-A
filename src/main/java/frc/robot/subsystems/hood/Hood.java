@@ -9,6 +9,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.FieldConstants;
 import frc.robot.subsystems.hood.HoodIO.HoodIOOutputs;
@@ -28,7 +30,9 @@ public class Hood extends FullSubsystem {
   private final HoodIOOutputs outputs = new HoodIOOutputs();
   private double targetPosition = 0;
   private HoodOutputMode outputMode = HoodOutputMode.BRAKE;
-  private boolean isAtTargetPosition = false;
+  private boolean atGoalPosition = false;
+  public Alert hoodDisconnectedAlert =
+      new Alert("IO Status", "Hood disconnected!", AlertType.kError);
 
   /** Creates a new Hood. */
   public Hood(HoodIO io) {
@@ -40,7 +44,7 @@ public class Hood extends FullSubsystem {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
     Logger.recordOutput("Hood/TargetRads", targetPosition);
-    Logger.recordOutput("Hood/Currentrads", inputs.positionRad);
+    hoodDisconnectedAlert.set(!inputs.connected);
   }
 
   public void setTargetPosition(double position) {
@@ -56,13 +60,13 @@ public class Hood extends FullSubsystem {
   public void periodicAfterScheduler() {
     outputs.mode = outputMode;
     outputs.targetPosition = targetPosition;
-    double currentPosition = Units.radiansToRotations(inputs.positionRad);
+    double currentPosition = Units.radiansToRotations(inputs.positionRadWithoutOffset);
     if (Math.abs(currentPosition - targetPosition) < 0.004) {
-      isAtTargetPosition = true;
+      atGoalPosition = true;
     } else {
-      isAtTargetPosition = false;
+      atGoalPosition = false;
     }
-    Logger.recordOutput("Hood/isAtTarget", isAtTargetPosition);
+    Logger.recordOutput("Hood/isAtTarget", atGoalPosition);
     io.applyOutputs(outputs);
   }
 

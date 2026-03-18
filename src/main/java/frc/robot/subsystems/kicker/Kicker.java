@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.kicker;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.kicker.KickerIO.KickerIOOutputs;
 import frc.robot.subsystems.kicker.KickerIO.KickerOutputMode;
@@ -16,6 +18,8 @@ public class Kicker extends FullSubsystem {
   private KickerIO io;
   private final KickerIOInputsAutoLogged inputs = new KickerIOInputsAutoLogged();
   private final KickerIOOutputs outputs = new KickerIOOutputs();
+  public Alert kickerDisconnectedAlert =
+      new Alert("IO Status", "Kicker disconnected!", AlertType.kError);
 
   private double kickerGoalSpeedRadPerSec = 0.0;
   private boolean atGoalSpeed = false;
@@ -29,6 +33,7 @@ public class Kicker extends FullSubsystem {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Kicker", inputs);
+    kickerDisconnectedAlert.set(!inputs.connected);
   }
 
   @AutoLogOutput
@@ -48,6 +53,7 @@ public class Kicker extends FullSubsystem {
       outputs.kickerMode = KickerOutputMode.CLOSED_LOOP;
       outputs.kickerGoalSpeedRadPerSec = kickerGoalSpeedRadPerSec;
     }
+    atGoalSpeed = Math.abs(inputs.kickerVelocityRadPerSec - kickerGoalSpeedRadPerSec) < 5;
 
     io.applyOutputs(outputs);
   }

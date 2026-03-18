@@ -1,5 +1,7 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.intake.IntakeConstants.ArmMechanismPosition;
@@ -22,8 +24,12 @@ public class Intake extends FullSubsystem {
   private IntakeOutputMode armOutputMode = IntakeOutputMode.COAST;
   // State helpers but its lowkenuinely dead code rn
   private boolean rollerAtGoal = false;
-
   private boolean hasExtendedIntake = false;
+
+  public Alert rollersDisconnectedAlert =
+      new Alert("IO Status", "Intake rollers disconnected!", AlertType.kError);
+  public Alert armDisconnectedAlert =
+      new Alert("IO Status", "Intake arm disconnected!", AlertType.kError);
 
   /** Creates a new Intake. */
   public Intake(IntakeIO io) {
@@ -34,6 +40,8 @@ public class Intake extends FullSubsystem {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Intake", inputs);
+    rollersDisconnectedAlert.set(!inputs.rollerConnected);
+    armDisconnectedAlert.set(!inputs.armConnected);
   }
 
   @Override

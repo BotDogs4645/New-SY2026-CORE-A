@@ -60,9 +60,11 @@ public class HoodIOTalonFX implements HoodIO {
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = HoodConstants.fowardSoftLimit;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        HoodConstants.fowardSoftLimit + startingOffset;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = HoodConstants.reverseSoftLimit;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        HoodConstants.reverseSoftLimit + startingOffset;
 
     tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(motorConfig, 0.25));
 
@@ -81,9 +83,11 @@ public class HoodIOTalonFX implements HoodIO {
     inputs.encoderConnected = encoderStatus.isOK();
 
     inputs.positionRad = Units.rotationsToRadians(positionRot.getValueAsDouble());
+    inputs.positionRadWithoutOffset =
+        Units.rotationsToRadians(positionRot.getValueAsDouble() - startingOffset);
     inputs.velocityRadPerSec = Units.rotationsToRadians(velocityRotPerSec.getValueAsDouble());
     inputs.supplyCurrent = Units.rotationsToRadians(supplyCurrent.getValueAsDouble());
-    inputs.startingOffset = startingOffset;
+    inputs.startingOffsetRad = Units.rotationsToRadians(startingOffset);
   }
 
   @Override

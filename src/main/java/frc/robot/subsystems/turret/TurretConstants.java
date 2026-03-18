@@ -20,11 +20,11 @@ public final class TurretConstants {
   public static final double encoderStartingPosition = -Math.PI;
   public static final double physicalStartingPosition = 0;
   public static final double hardReverseLimit = -(Math.PI * 3.0) / 2.0;
-  public static final double hardForwardLimit = Math.PI / 2.0;
+  public static final double hardForwardLimit = 1.418525497443357;
 
-  public static final double gearRatio = 3.2959;
+  public static final double gearRatio = 3.3333;
 
   public static final double turretXOffsetMeters = 0.22225;
-  public static final double turretYOffsetMeters = 0.483;
+  public static final double turretYOffsetMeters = -0.14;
   public static final double turretZOffsetMeters = 0.4445;
 }

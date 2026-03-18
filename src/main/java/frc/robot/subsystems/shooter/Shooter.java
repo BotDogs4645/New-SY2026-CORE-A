@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.shooter.ShooterIO.ShooterIOOutputs;
@@ -17,6 +19,8 @@ public class Shooter extends FullSubsystem {
   private ShooterIO io;
   private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
   private final ShooterIOOutputs outputs = new ShooterIOOutputs();
+  public Alert shooterDisconnectedAlert =
+      new Alert("IO Status", "Shooter disconnected!", AlertType.kError);
 
   private double shooterGoalSpeedRadPerSec = 0.0;
   private boolean atGoalSpeed = false;
@@ -32,6 +36,7 @@ public class Shooter extends FullSubsystem {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);
+    shooterDisconnectedAlert.set(!inputs.connected);
   }
 
   @AutoLogOutput

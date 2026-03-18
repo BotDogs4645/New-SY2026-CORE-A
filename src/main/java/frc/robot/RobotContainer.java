@@ -11,9 +11,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -86,7 +83,7 @@ public class RobotContainer {
   private final AutoShotCalculator shotCalculator;
   private AutoShotCalculator.ShotSolution latestSolution = AutoShotCalculator.ShotSolution.none();
   private static final LoggedTunableNumber hoodOffset =
-      new LoggedTunableNumber("AutoShot/hoodOffset", 0.309);
+      new LoggedTunableNumber("AutoShot/hoodOffset", 0.122);
 
   // private final Trigger isUnableToShoot = new
   // Trigger(shotCalculator::isUnableToShoot);
@@ -220,16 +217,6 @@ public class RobotContainer {
     // () -> -driveController.getLeftX(),
     // () -> Rotation2d.kZero));
 
-    Alert hoodDisconnectedAlert = new Alert("IO Status", "Hood disconnected", AlertType.kError);
-
-    driveController
-        .a()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  hoodDisconnectedAlert.set(true);
-                }));
-
     // Reset gyro to 0° when B button is pressed
     driveController
         .b()
@@ -253,16 +240,20 @@ public class RobotContainer {
 
     driveController
         .leftTrigger()
-        .whileTrue(Commands.parallel(kicker.RunKicker(), spindexer.RunSpindexer()));
+        .whileTrue(
+            Commands.parallel(
+                kicker.RunKicker(),
+                Commands.sequence(
+                    Commands.waitUntil(kicker::atGoalSpeed), spindexer.RunSpindexer())));
 
     driveController.y().whileTrue(intake.RunOuttake(driveController.x()));
     // driveController
-    //     .y()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () -> {
-    //               questNavIO.resetToZero();
-    //             }));
+    // .y()
+    // .onTrue(
+    // Commands.runOnce(
+    // () -> {
+    // questNavIO.resetToZero();
+    // }));
 
     driveController
         .a()
@@ -280,14 +271,15 @@ public class RobotContainer {
                       if (latestSolution.isSolutionFound()) {
                         Alerts.AutoShot.outOfBoundsAlert.set(false);
                         Alerts.AutoShot.turretCannotReachAlert.set(false);
-                        // turret.setGoalPositionRad(latestSolution.turretAngleRad());
-                        Logger.recordOutput(
-                            "Turret/rawTargetPosition",
-                            Units.radiansToRotations(latestSolution.turretAngleRad()));
-                        hood.setGoalPosition(
+                        turret.setGoalPositionRad(latestSolution.turretAngleRad());
+                        double hoodGoalPosition =
                             (Math.PI / 2)
                                 - latestSolution.hoodAngleRad()
-                                - hoodOffset.getAsDouble());
+                                - hoodOffset.getAsDouble();
+                        Logger.recordOutput(
+                            "Turret/targetPositionRad", latestSolution.turretAngleRad());
+                        Logger.recordOutput("Hood/targetPositionRad", hoodGoalPosition);
+                        hood.setGoalPosition(hoodGoalPosition);
                         shooter.setShooterGoalSpeedRadPerSec(
                             latestSolution.flywheelVelocityRadPerSec());
                       } else {
@@ -302,11 +294,13 @@ public class RobotContainer {
                     () -> {
                       Alerts.AutoShot.outOfBoundsAlert.set(false);
                       Alerts.AutoShot.turretCannotReachAlert.set(false);
+                      shooter.setShooterGoalSpeedRadPerSec(0);
                     },
                     turret)
                 .withName("AutoAim"));
 
-    // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose, drive.));
+    // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose,
+    // drive.));
     // driveController.rightTrigger().onTrue(leds.BlinkLEDs());
   }
 
@@ -343,8 +337,8 @@ public class RobotContainer {
 
   private Translation3d getHubTarget() {
     // boolean isRed =
-    //     DriverStation.getAlliance().isPresent()
-    //         && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+    // DriverStation.getAlliance().isPresent()
+    // && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
     boolean isRed = false;
     return isRed ? FieldConstants.Hub.oppTopCenterPoint : FieldConstants.Hub.topCenterPoint;
   }

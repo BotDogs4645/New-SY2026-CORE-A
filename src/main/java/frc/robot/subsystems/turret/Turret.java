@@ -10,6 +10,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.FieldConstants;
@@ -27,6 +29,8 @@ public class Turret extends FullSubsystem {
   private NeutralOut neutralControlRequest = new NeutralOut();
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
   private final TurretIOOutputs outputs = new TurretIOOutputs();
+  public Alert turretDisconnectedAlert =
+      new Alert("IO Status", "Turret disconnected!", AlertType.kError);
 
   private double goalPositionRad = 0;
   private boolean noPositionAvailable = false;
@@ -45,6 +49,7 @@ public class Turret extends FullSubsystem {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Turret", inputs);
+    turretDisconnectedAlert.set(!inputs.connected);
   }
 
   @Override

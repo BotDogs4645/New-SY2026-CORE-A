@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.spindexer;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.spindexer.SpindexerIO.SpindexerIOOutputs;
 import frc.robot.subsystems.spindexer.SpindexerIO.SpindexerOutputMode;
@@ -14,6 +16,8 @@ public class Spindexer extends FullSubsystem {
 
   private SpindexerIO io;
   private final SpindexerIOInputsAutoLogged inputs = new SpindexerIOInputsAutoLogged();
+  public Alert spindexerDisconnectedAlert =
+      new Alert("IO Status", "Spindexer disconnected!", AlertType.kError);
 
   private SpindexerIOOutputs outputs = new SpindexerIOOutputs();
   private double targetSpeed = 0;
@@ -27,6 +31,7 @@ public class Spindexer extends FullSubsystem {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Spindexer", inputs);
+    spindexerDisconnectedAlert.set(!inputs.connected);
   }
 
   public void setTargetSpeed(double speed) {

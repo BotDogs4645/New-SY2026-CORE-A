@@ -12,5 +12,5 @@ public final class SpindexerConstants {
   public static final double motionMagicJerk = 0.0;
 
   public static final boolean isInverted = true;
-  public static final double activeSpeed = 0.1;
+  public static final double activeSpeed = 0.3;
 }
