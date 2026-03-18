@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.FieldConstants;
 import frc.robot.subsystems.shooter.ShooterConstants;
@@ -17,8 +18,10 @@ import java.util.OptionalDouble;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * Gemini is the physics genius... we will see how this works -CR Stateless auto-shot calculator
- * that models projectile motion with gravity and air drag, compensates for robot velocity, and
+ * Gemini is the physics genius... we will see how this works -CR Stateless
+ * auto-shot calculator
+ * that models projectile motion with gravity and air drag, compensates for
+ * robot velocity, and
  * iteratively solves for turret yaw, hood pitch, and flywheel speed.
  */
 public class AutoShotCalculator {
@@ -26,6 +29,7 @@ public class AutoShotCalculator {
 
   public AutoShotCalculator(Turret turret) {
     this.turret = turret;
+
   }
 
   public record ShotSolution(
@@ -45,44 +49,39 @@ public class AutoShotCalculator {
   }
 
   // ball properties
-  private static final LoggedTunableNumber ballMassKg =
-      new LoggedTunableNumber("AutoShot/ballMassKg", 0.215);
-  private static final LoggedTunableNumber ballDiameterMeters =
-      new LoggedTunableNumber("AutoShot/ballDiameterMeters", 0.150114);
-  private static final LoggedTunableNumber dragCoefficient =
-      new LoggedTunableNumber("AutoShot/dragCoefficient", 0.7);
-  private static final LoggedTunableNumber airDensityKgPerM3 =
-      new LoggedTunableNumber("AutoShot/airDensityKgPerM3", 1.225);
+  private static final LoggedTunableNumber ballMassKg = new LoggedTunableNumber("AutoShot/ballMassKg", 0.215);
+  private static final LoggedTunableNumber ballDiameterMeters = new LoggedTunableNumber("AutoShot/ballDiameterMeters",
+      0.150114);
+  private static final LoggedTunableNumber dragCoefficient = new LoggedTunableNumber("AutoShot/dragCoefficient", 0.7);
+  private static final LoggedTunableNumber airDensityKgPerM3 = new LoggedTunableNumber("AutoShot/airDensityKgPerM3",
+      1.225);
 
   // flywheel
-  private static final LoggedTunableNumber flywheelSpeedDropRadPerSec =
-      new LoggedTunableNumber("AutoShot/flywheelSpeedDropRadPerSec", 43.0);
-  private static final LoggedTunableNumber launchEfficiency =
-      new LoggedTunableNumber("AutoShot/launchEfficiency", 0.975);
+  private static final LoggedTunableNumber flywheelSpeedDropRadPerSec = new LoggedTunableNumber(
+      "AutoShot/flywheelSpeedDropRadPerSec", 43.0);
+  private static final LoggedTunableNumber launchEfficiency = new LoggedTunableNumber("AutoShot/launchEfficiency",
+      0.975);
 
   // simulation
-  private static final LoggedTunableNumber simTimeStepSecs =
-      new LoggedTunableNumber("AutoShot/simTimeStepSecs", 0.02);
+  private static final LoggedTunableNumber simTimeStepSecs = new LoggedTunableNumber("AutoShot/simTimeStepSecs", 0.02);
 
   // angle sweep
-  private static final LoggedTunableNumber minLaunchAngleDeg =
-      new LoggedTunableNumber("AutoShot/minLaunchAngleDeg", 40);
-  private static final LoggedTunableNumber maxLaunchAngleDeg =
-      new LoggedTunableNumber("AutoShot/maxLaunchAngleDeg", 90);
-  private static final LoggedTunableNumber angleStepDeg =
-      new LoggedTunableNumber("AutoShot/angleStepDeg", 0.25);
+  private static final LoggedTunableNumber minLaunchAngleDeg = new LoggedTunableNumber("AutoShot/minLaunchAngleDeg",
+      40);
+  private static final LoggedTunableNumber maxLaunchAngleDeg = new LoggedTunableNumber("AutoShot/maxLaunchAngleDeg",
+      90);
+  private static final LoggedTunableNumber angleStepDeg = new LoggedTunableNumber("AutoShot/angleStepDeg", 0.25);
 
   // speed limit
-  private static final LoggedTunableNumber maxLaunchSpeedMps =
-      new LoggedTunableNumber("AutoShot/maxLaunchSpeedMps", 4);
-  private static final LoggedTunableNumber minLaunchSpeedMps =
-      new LoggedTunableNumber("AutoShot/minLaunchSpeedMps", 2);
+  private static final LoggedTunableNumber maxLaunchSpeedMps = new LoggedTunableNumber("AutoShot/maxLaunchSpeedMps", 4);
+  private static final LoggedTunableNumber minLaunchSpeedMps = new LoggedTunableNumber("AutoShot/minLaunchSpeedMps", 2);
 
   enum ShooterDistanceCutoff {
     L1(2, 7),
     L2(4, 7.5),
     L3(6, 12),
     DEFAULT(Double.POSITIVE_INFINITY, 8);
+
     final double maxDistance, speedMps;
 
     ShooterDistanceCutoff(double maxDistance, double speedMps) {
@@ -107,12 +106,14 @@ public class AutoShotCalculator {
   }
 
   /**
-   * Calculate the optimal shot solution given the current robot state and target position.
+   * Calculate the optimal shot solution given the current robot state and target
+   * position.
    *
-   * @param robotPose current robot pose on the field
+   * @param robotPose           current robot pose on the field
    * @param robotRelativeSpeeds robot-relative chassis speeds
-   * @param targetPosition 3D position of the target on the field
-   * @return a ShotSolution with turret angle, hood angle, flywheel speed, and validity
+   * @param targetPosition      3D position of the target on the field
+   * @return a ShotSolution with turret angle, hood angle, flywheel speed, and
+   *         validity
    */
   public ShotSolution calculate(
       Pose2d robotPose,
@@ -120,14 +121,18 @@ public class AutoShotCalculator {
       Translation3d targetPosition,
       Rotation2d currentHoodRotation) {
 
+    Timer timer = new Timer();
+    timer.start();
     // ensure robot is on correct side
     Optional<Alliance> driverStationAlliance = Optional.of(Alliance.Blue);
     Alliance currentAllianceSide = FieldConstants.getAllianceSide(robotPose);
-    boolean isAtValidPosition =
-        !(driverStationAlliance.isPresent() && driverStationAlliance.get() != currentAllianceSide);
+    boolean isAtValidPosition = !(driverStationAlliance.isPresent()
+        && driverStationAlliance.get() != currentAllianceSide);
     if (!isAtValidPosition) {
       Logger.recordOutput("AutoShot/solutionFound", false);
       Logger.recordOutput("AutoShot/constrainingFactor", ConstrainingFactor.LOCATION);
+      timer.stop();
+      Logger.recordOutput("AutoShot/calculationTime", timer.get());
       return ShotSolution.none(ConstrainingFactor.LOCATION);
     }
 
@@ -138,14 +143,12 @@ public class AutoShotCalculator {
     double cosH = Math.cos(heading);
     double sinH = Math.sin(heading);
 
-    double hoodX =
-        robotX
-            + TurretConstants.turretXOffsetMeters * cosH
-            - TurretConstants.turretYOffsetMeters * sinH;
-    double hoodY =
-        robotY
-            + TurretConstants.turretYOffsetMeters * sinH
-            + TurretConstants.turretYOffsetMeters * cosH;
+    double hoodX = robotX
+        + TurretConstants.turretXOffsetMeters * cosH
+        - TurretConstants.turretYOffsetMeters * sinH;
+    double hoodY = robotY
+        + TurretConstants.turretYOffsetMeters * sinH
+        + TurretConstants.turretYOffsetMeters * cosH;
 
     // turret pivot in field coords
     double pivotX = hoodX;
@@ -159,10 +162,8 @@ public class AutoShotCalculator {
     double dz = targetPosition.getZ() - pivotZ;
 
     // 3. Convert robot-relative speeds to field-relative
-    double fieldVx =
-        robotRelativeSpeeds.vxMetersPerSecond * cosH - robotRelativeSpeeds.vyMetersPerSecond * sinH;
-    double fieldVy =
-        robotRelativeSpeeds.vxMetersPerSecond * sinH + robotRelativeSpeeds.vyMetersPerSecond * cosH;
+    double fieldVx = robotRelativeSpeeds.vxMetersPerSecond * cosH - robotRelativeSpeeds.vyMetersPerSecond * sinH;
+    double fieldVy = robotRelativeSpeeds.vxMetersPerSecond * sinH + robotRelativeSpeeds.vyMetersPerSecond * cosH;
 
     // 4. Estimate flight time from horizontal distance / rough speed estimate
     double horizontalDist = Math.hypot(dx, dy);
@@ -184,6 +185,8 @@ public class AutoShotCalculator {
     if (!turretAnglePossible) {
       Logger.recordOutput("AutoShot/solutionFound", false);
       Logger.recordOutput("AutoShot/constrainingFactor", ConstrainingFactor.TURRET_RANGE);
+      timer.stop();
+      Logger.recordOutput("AutoShot/calculationTime", timer.get());
       return ShotSolution.none(ConstrainingFactor.TURRET_RANGE);
     }
     Logger.recordOutput("Turret/autoShotAngleRads", bestTurretAngle.getAsDouble());
@@ -194,22 +197,18 @@ public class AutoShotCalculator {
     double stepRad = Units.degreesToRadians(angleStepDeg.get());
 
     ShotSolution bestSolution = ShotSolution.none();
-    double lowestAngle = Double.NEGATIVE_INFINITY;
     for (double pitchRad = minAngleRad; pitchRad <= maxAngleRad; pitchRad += stepRad) {
       double speed = solveForSpeed(pitchRad, effectiveDist, targetHeight);
       if (speed > 0.0) {
-        if (pitchRad > lowestAngle) {
-          lowestAngle = Math.abs(pitchRad - currentHoodRotation.getRadians());
-          double flywheelRadPerSec = exitSpeedToFlywheelVelocity(speed);
-          bestSolution =
-              new ShotSolution(
-                  bestTurretAngle.getAsDouble(),
-                  pitchRad,
-                  flywheelRadPerSec,
-                  horizontalDist,
-                  true,
-                  ConstrainingFactor.NONE);
-        }
+        double flywheelRadPerSec = exitSpeedToFlywheelVelocity(speed);
+        bestSolution = new ShotSolution(
+            bestTurretAngle.getAsDouble(),
+            pitchRad,
+            flywheelRadPerSec,
+            horizontalDist,
+            true,
+            ConstrainingFactor.NONE);
+        break;
       }
     }
 
@@ -218,15 +217,14 @@ public class AutoShotCalculator {
       // Generate trajectory for the chosen best solution for logging
       double launchSpeed = flywheelVelocityToExitSpeed(bestSolution.flywheelVelocityRadPerSec());
 
-      Pose3d[] linePoses =
-          generateTrajectory(
-              launchSpeed,
-              bestSolution.hoodAngleRad(),
-              fieldYaw,
-              pivotX,
-              pivotY,
-              pivotZ,
-              targetHeight);
+      Pose3d[] linePoses = generateTrajectory(
+          launchSpeed,
+          bestSolution.hoodAngleRad(),
+          fieldYaw,
+          pivotX,
+          pivotY,
+          pivotZ,
+          targetHeight);
       Logger.recordOutput("AutoShot/distanceMeters", horizontalDist);
       Logger.recordOutput("AutoShot/effectiveDistanceMeters", effectiveDist);
       Logger.recordOutput(
@@ -238,7 +236,8 @@ public class AutoShotCalculator {
       Logger.recordOutput("AutoShot/solutionFound", true);
       Logger.recordOutput("AutoShot/constrainingFactor", bestSolution.constrainingFactor);
       Logger.recordOutput("AutoShot/TrajectoryLine", linePoses);
-
+      timer.stop();
+      Logger.recordOutput("AutoShot/calculationTime", timer.get());
       return bestSolution;
     }
 
@@ -250,13 +249,16 @@ public class AutoShotCalculator {
     Logger.recordOutput("AutoShot/solutionFound", false);
     Logger.recordOutput("AutoShot/TrajectoryLine", EMPTY_TRAJECTORY);
     Logger.recordOutput("AutoShot/constrainingFactor", ConstrainingFactor.SHOOTER_RANGE);
-
+    timer.stop();
+    Logger.recordOutput("AutoShot/calculationTime", timer.get());
     return ShotSolution.none(ConstrainingFactor.SHOOTER_RANGE);
   }
 
   /**
-   * Simulate the trajectory at a given launch speed and pitch angle using Euler integration with
-   * drag. Returns the horizontal distance reached when the projectile passes through the target
+   * Simulate the trajectory at a given launch speed and pitch angle using Euler
+   * integration with
+   * drag. Returns the horizontal distance reached when the projectile passes
+   * through the target
    * height, or -1 if it never reaches that height.
    */
   private double simulateTrajectory(double launchSpeed, double pitchRad, double targetHeight) {
@@ -310,7 +312,8 @@ public class AutoShotCalculator {
   }
 
   /**
-   * Binary search for the launch speed that makes the projectile land at the target distance for a
+   * Binary search for the launch speed that makes the projectile land at the
+   * target distance for a
    * given pitch angle and target height.
    *
    * @return required launch speed in m/s, or -1 if no valid speed found
@@ -335,7 +338,8 @@ public class AutoShotCalculator {
   }
 
   /**
-   * Convert ball exit speed to flywheel angular velocity in rad/s. Accounts for launch efficiency
+   * Convert ball exit speed to flywheel angular velocity in rad/s. Accounts for
+   * launch efficiency
    * and flywheel speed drop during shot.
    */
   private double exitSpeedToFlywheelVelocity(double speedMps) {
@@ -345,7 +349,10 @@ public class AutoShotCalculator {
     return (surfaceSpeed / wheelRadius) + flywheelSpeedDropRadPerSec.get();
   }
 
-  /** Inverse of exitSpeedToFlywheelVelocity, used for re-creating launch speed for logging. */
+  /**
+   * Inverse of exitSpeedToFlywheelVelocity, used for re-creating launch speed for
+   * logging.
+   */
   private double flywheelVelocityToExitSpeed(double flywheelRadPerSec) {
     double wheelRadius = ShooterConstants.shooterWheelRadiusMeters;
     double efficiency = launchEfficiency.get();
@@ -354,7 +361,8 @@ public class AutoShotCalculator {
   }
 
   /**
-   * Run the Euler sim for the solved shot and return field-space Pose3d points along the arc. Used
+   * Run the Euler sim for the solved shot and return field-space Pose3d points
+   * along the arc. Used
    * for AdvantageScope 3D trajectory visualization.
    */
   private Pose3d[] generateTrajectory(
@@ -394,8 +402,10 @@ public class AutoShotCalculator {
         tx += tvx * dt;
         tz += tvz * dt;
         totalSteps++;
-        if (tpz >= targetHeight && tz <= targetHeight && tvz <= 0) break;
-        if (tz < targetHeight - 1.0 && tvz < 0) break;
+        if (tpz >= targetHeight && tz <= targetHeight && tvz <= 0)
+          break;
+        if (tz < targetHeight - 1.0 && tvz < 0)
+          break;
         tpz = tz;
       }
     }
@@ -422,8 +432,10 @@ public class AutoShotCalculator {
         poses[poseIdx++] = new Pose3d(fieldX, fieldY, fieldZ, new Rotation3d());
       }
 
-      if (prevZ >= targetHeight && z <= targetHeight && vz <= 0) break;
-      if (z < targetHeight - 1.0 && vz < 0) break;
+      if (prevZ >= targetHeight && z <= targetHeight && vz <= 0)
+        break;
+      if (z < targetHeight - 1.0 && vz < 0)
+        break;
       prevZ = z;
     }
 
