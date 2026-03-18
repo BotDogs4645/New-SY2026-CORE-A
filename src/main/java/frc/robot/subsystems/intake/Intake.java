@@ -64,7 +64,7 @@ public class Intake extends FullSubsystem {
 
   @AutoLogOutput
   public boolean armAtGoal() {
-    return Math.abs(inputs.armAngleRad - armGoalPosition.motorPositionRad) < 0.6;
+    return Math.abs(inputs.armAngleRad - armGoalPosition.motorPositionRad) < 1;
   }
 
   @AutoLogOutput
@@ -78,6 +78,7 @@ public class Intake extends FullSubsystem {
   }
 
   public Command ExtendIntake() {
+
     return Commands.sequence(
             runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_HALF_DOWN)),
             Commands.waitUntil(this::armAtGoal),
@@ -111,6 +112,21 @@ public class Intake extends FullSubsystem {
     return runEnd(
         () -> {
           setRollerOutput(IntakeConstants.intakingRollerOutput);
+          if (dislodgeBalls.getAsBoolean()) {
+            setArmGoalPosition(ArmMechanismPosition.DISLODGE_BALLS);
+          } else {
+            setArmGoalPosition(ArmMechanismPosition.ARM_DOWN);
+          }
+        },
+        () -> {
+          setRollerOutput(0);
+        });
+  }
+
+  public Command RunOuttake(BooleanSupplier dislodgeBalls) {
+    return runEnd(
+        () -> {
+          setRollerOutput(-IntakeConstants.intakingRollerOutput);
           if (dislodgeBalls.getAsBoolean()) {
             setArmGoalPosition(ArmMechanismPosition.DISLODGE_BALLS);
           } else {

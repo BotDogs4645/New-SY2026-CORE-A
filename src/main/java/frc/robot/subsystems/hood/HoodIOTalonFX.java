@@ -23,16 +23,28 @@ import edu.wpi.first.units.measure.Current;
 public class HoodIOTalonFX implements HoodIO {
   private final TalonFX hoodMotor =
       new TalonFX(HoodConstants.motorCanId, HoodConstants.motorCanBus);
-  private final CANcoder throughboreEncoder = new CANcoder(HoodConstants.thorughboreEncoderId);
+  private final CANcoder throughboreEncoder =
+      new CANcoder(HoodConstants.thorughboreEncoderId, HoodConstants.encoderCanBus);
 
   private final StatusSignal<Current> supplyCurrent = hoodMotor.getSupplyCurrent();
   private final StatusSignal<Angle> positionRot = hoodMotor.getPosition();
+  private final StatusSignal<Angle> encoderPositionRot = throughboreEncoder.getPosition();
   private final StatusSignal<AngularVelocity> velocityRotPerSec = hoodMotor.getVelocity();
 
   private final MotionMagicDutyCycle motionMagicPositionCycle = new MotionMagicDutyCycle(0);
   private final NeutralOut brakeControl = new NeutralOut();
 
+  private double startingOffset = 0;
+
   public HoodIOTalonFX() {
+
+    var encoderConfig = new CANcoderConfiguration();
+    encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+    encoderConfig.MagnetSensor.MagnetOffset = 0.5;
+    tryUntilOk(5, () -> throughboreEncoder.getConfigurator().apply(encoderConfig, 0.25));
+
+    startingOffset = throughboreEncoder.getPosition().getValueAsDouble();
+
     var motorConfig = new TalonFXConfiguration();
 
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = HoodConstants.motionMagicCruiseVelocity;
@@ -51,13 +63,6 @@ public class HoodIOTalonFX implements HoodIO {
 
     tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(motorConfig, 0.25));
 
-    var encoderConfig = new CANcoderConfiguration();
-    encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
-    tryUntilOk(5, () -> throughboreEncoder.getConfigurator().apply(encoderConfig, 0.25));
-
-    throughboreEncoder.setPosition(0);
-    hoodMotor.setPosition(0);
-
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(hoodMotor);
   }
@@ -66,9 +71,13 @@ public class HoodIOTalonFX implements HoodIO {
   public void updateInputs(HoodIOInputs inputs) {
     BaseStatusSignal.refreshAll(supplyCurrent, positionRot, velocityRotPerSec);
 
+    var encoderStatus = BaseStatusSignal.refreshAll(encoderPositionRot);
+    inputs.encoderConnected = encoderStatus.isOK();
+
     inputs.positionRad = Units.rotationsToRadians(positionRot.getValueAsDouble());
     inputs.velocityRadPerSec = Units.rotationsToRadians(velocityRotPerSec.getValueAsDouble());
     inputs.supplyCurrent = Units.rotationsToRadians(supplyCurrent.getValueAsDouble());
+    inputs.startingOffset = startingOffset;
   }
 
   @Override
@@ -76,7 +85,7 @@ public class HoodIOTalonFX implements HoodIO {
     if (outputs.mode == HoodOutputMode.BRAKE) {
       hoodMotor.setControl(brakeControl);
     } else {
-      double positionRot = Units.radiansToRotations(outputs.targetPosition);
+      double positionRot = Units.radiansToRotations(outputs.targetPosition) + startingOffset;
       hoodMotor.setControl(motionMagicPositionCycle.withPosition(positionRot));
     }
   }

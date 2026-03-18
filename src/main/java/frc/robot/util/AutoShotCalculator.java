@@ -58,7 +58,7 @@ public class AutoShotCalculator {
   private static final LoggedTunableNumber flywheelSpeedDropRadPerSec =
       new LoggedTunableNumber("AutoShot/flywheelSpeedDropRadPerSec", 42.0);
   private static final LoggedTunableNumber launchEfficiency =
-      new LoggedTunableNumber("AutoShot/launchEfficiency", 0.95);
+      new LoggedTunableNumber("AutoShot/launchEfficiency", 0.75);
 
   // simulation
   private static final LoggedTunableNumber simTimeStepSecs =
@@ -428,6 +428,6 @@ public class AutoShotCalculator {
   /** Rough flight time estimate for velocity compensation. */
   private double estimateFlightTime(double distance) {
     // assume ~20 m/s average speed as rough estimate
-    return distance / 20.0;
+    return distance / 17.0;
   }
 }

@@ -7,6 +7,7 @@ public final class HoodConstants {
   public static final int motorCanId = 18;
   public static final int thorughboreEncoderId = 19;
   public static final CANBus motorCanBus = new CANBus("CANivore");
+  public static final CANBus encoderCanBus = new CANBus("CANivore");
 
   public static final double motionMagicCruiseVelocity = 14;
   public static final double motionMagicAcceleration = 9;

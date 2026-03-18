@@ -7,7 +7,7 @@ public final class ShooterConstants {
   public static final CANBus motorCanBus = new CANBus("CANivore");
   public static final boolean motorInverted = true;
 
-  public static final double defaultSpeedRadPerSec = 600;
+  public static final double defaultSpeedRadPerSec = 300;
 
   // not yet implemented (amps)
   public static final double supplyCurrentLimit = 1000;

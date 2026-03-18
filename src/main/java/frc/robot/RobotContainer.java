@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
@@ -45,10 +44,12 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.util.Alerts;
 import frc.robot.util.AutoShotCalculator;
+import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -70,17 +71,20 @@ public class RobotContainer {
   private final Leds leds;
 
   // vision systemns
-  // private final Vision vision;
+  private final Vision vision;
   // private final VisionIOQuestNav questNavIO;
   private final VisionIOLimelight limelightIO;
 
   // Controller
   private final CommandXboxController driveController = new CommandXboxController(0);
-  private final CommandJoystick operatorPanel = new CommandJoystick(1);
+  private final CommandXboxController operatorController = new CommandXboxController(1);
+  // private final CommandJoystick operatorPanel = new CommandJoystick(1);
   private final Field2d m_field = new Field2d();
 
   private final AutoShotCalculator shotCalculator;
   private AutoShotCalculator.ShotSolution latestSolution = AutoShotCalculator.ShotSolution.none();
+  private static final LoggedTunableNumber hoodOffset =
+      new LoggedTunableNumber("AutoShot/hoodOffset", 0.309);
 
   // private final Trigger isUnableToShoot = new
   // Trigger(shotCalculator::isUnableToShoot);
@@ -149,7 +153,9 @@ public class RobotContainer {
     // vision instantiation
     // questNavIO = new VisionIOQuestNav();
     limelightIO = new VisionIOLimelight(VisionConstants.limelightName, drive::getRotation);
-    // vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
+    vision = new Vision(drive::addVisionMeasurement, limelightIO);
+
+    drive.setPose(new Pose2d(3.547, 4.062, Rotation2d.kZero));
 
     // subsystems
     turret = new Turret(new TurretIOTalonFX());
@@ -223,15 +229,21 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
+    // driveController.x().onTrue(leds.BlinkLEDs());
+
     // operatorPanel.button(7).onTrue(intake.ExtendIntake());
     // operatorPanel.button(6).whileTrue(OldShootBalls());
     // operatorPanel.button(10).whileTrue(intake.RunIntake());
     // driveController.leftBumper().onTrue(intake.ExtendIntake());
-    driveController.leftTrigger().whileTrue(intake.RunIntake(driveController.leftTrigger()));
-    driveController
-        .rightBumper()
-        .whileTrue(turret.followHub(drive::getPose, drive::getChassisSpeeds));
+    driveController.rightTrigger().whileTrue(intake.RunIntake(driveController.x()));
 
+    driveController.rightBumper().onTrue(intake.ExtendIntake());
+
+    driveController
+        .leftTrigger()
+        .whileTrue(Commands.parallel(kicker.RunKicker(), spindexer.RunSpindexer()));
+
+    driveController.y().whileTrue(intake.RunOuttake(driveController.x()));
     // driveController
     //     .y()
     //     .onTrue(
@@ -252,14 +264,20 @@ public class RobotContainer {
                               drive.getChassisSpeeds(),
                               target,
                               hood.getCurrentHoodRotation());
+
                       if (latestSolution.isSolutionFound()) {
                         Alerts.AutoShot.outOfBoundsAlert.set(false);
                         Alerts.AutoShot.turretCannotReachAlert.set(false);
-                        turret.setGoalPositionRad(latestSolution.turretAngleRad());
+                        // turret.setGoalPositionRad(latestSolution.turretAngleRad());
                         Logger.recordOutput(
                             "Turret/rawTargetPosition",
                             Units.radiansToRotations(latestSolution.turretAngleRad()));
-                        hood.setGoalPosition((Math.PI / 2) - latestSolution.hoodAngleRad() - 0.065);
+                        hood.setGoalPosition(
+                            (Math.PI / 2)
+                                - latestSolution.hoodAngleRad()
+                                - hoodOffset.getAsDouble());
+                        shooter.setShooterGoalSpeedRadPerSec(
+                            latestSolution.flywheelVelocityRadPerSec());
                       } else {
                         switch (latestSolution.constrainingFactor()) {
                           case TURRET_RANGE:
@@ -273,8 +291,7 @@ public class RobotContainer {
                       Alerts.AutoShot.outOfBoundsAlert.set(false);
                       Alerts.AutoShot.turretCannotReachAlert.set(false);
                     },
-                    turret,
-                    hood)
+                    turret)
                 .withName("AutoAim"));
 
     // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose, drive.));
