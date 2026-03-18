@@ -15,10 +15,12 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import org.littletonrobotics.junction.Logger;
 
 public class HoodIOTalonFX implements HoodIO {
   private final TalonFX hoodMotor =
@@ -35,6 +37,7 @@ public class HoodIOTalonFX implements HoodIO {
   private final NeutralOut brakeControl = new NeutralOut();
 
   private double startingOffset = 0;
+  private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   public HoodIOTalonFX() {
 
@@ -65,11 +68,14 @@ public class HoodIOTalonFX implements HoodIO {
 
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(hoodMotor);
+    Logger.recordOutput("Hood/talonFXInitialized", true);
   }
 
   @Override
   public void updateInputs(HoodIOInputs inputs) {
-    BaseStatusSignal.refreshAll(supplyCurrent, positionRot, velocityRotPerSec);
+    var status = BaseStatusSignal.refreshAll(supplyCurrent, positionRot, velocityRotPerSec);
+
+    inputs.connected = connectedDebounce.calculate(status.isOK());
 
     var encoderStatus = BaseStatusSignal.refreshAll(encoderPositionRot);
     inputs.encoderConnected = encoderStatus.isOK();

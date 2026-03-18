@@ -14,6 +14,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -37,6 +38,12 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<AngularVelocity> armVelocityRotPerSec = armMotor.getVelocity();
   private final StatusSignal<Voltage> armVoltage = armMotor.getMotorVoltage();
   private final StatusSignal<Angle> armPositionRot = armMotor.getPosition();
+  private final StatusSignal<Integer> faultField = armMotor.getFaultField();
+
+  private final Debouncer armConnectedDebounce =
+      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+  private final Debouncer rollersConnectedDebounce =
+      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   @Override
   public void applyOutputs(IntakeIOOutputs outputs) {
@@ -111,28 +118,30 @@ public class IntakeIOTalonFX implements IntakeIO {
         armVoltage,
         armPositionRot);
     ParentDevice.optimizeBusUtilizationForAll(rollerMotor, armMotor);
+    Logger.recordOutput("Kicker/roller/talonFXInitialized", true);
+    Logger.recordOutput("Kicker/arm/talonFXInitialized", true);
   }
 
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
-    BaseStatusSignal.refreshAll(
-        rollerSupplyCurrent,
-        rollerVelocityRotPerSec,
-        rollerVoltage,
-        armSupplyCurrent,
-        armVelocityRotPerSec,
-        armVoltage,
-        armPositionRot);
+    var rollerStatus =
+        BaseStatusSignal.refreshAll(rollerSupplyCurrent, rollerVelocityRotPerSec, rollerVoltage);
+    var armStatus =
+        BaseStatusSignal.refreshAll(
+            armSupplyCurrent, armVelocityRotPerSec, armVoltage, armPositionRot);
 
     inputs.rollerSupplyCurrent = rollerSupplyCurrent.getValueAsDouble();
     inputs.rollerVelocityRadPerSec =
         Units.rotationsToRadians(rollerVelocityRotPerSec.getValueAsDouble());
     inputs.rollerAppliedVoltage = rollerVoltage.getValueAsDouble();
 
+    inputs.rollerConnected = rollersConnectedDebounce.calculate(rollerStatus.isOK());
+
     inputs.armSupplyCurrent = armSupplyCurrent.getValueAsDouble();
     inputs.armVelocityRadPerSec = Units.rotationsToRadians(armVelocityRotPerSec.getValueAsDouble());
     inputs.armAppliedVoltage = armVoltage.getValueAsDouble();
     inputs.armAngleRad = Units.rotationsToRadians(armPositionRot.getValueAsDouble());
+    inputs.armConnected = armConnectedDebounce.calculate(armStatus.isOK());
   }
 
   @Override

@@ -10,6 +10,7 @@ public interface HoodIO {
     public double velocityRadPerSec = 0.0;
     public double startingOffset = 0;
     public boolean encoderConnected = false;
+    public boolean connected = false;
   }
 
   public default void updateInputs(HoodIOInputs inputs) {}

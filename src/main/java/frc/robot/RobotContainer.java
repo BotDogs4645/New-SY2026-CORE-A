@@ -12,6 +12,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -217,6 +219,16 @@ public class RobotContainer {
     // () -> -driveController.getLeftY(),
     // () -> -driveController.getLeftX(),
     // () -> Rotation2d.kZero));
+
+    Alert hoodDisconnectedAlert = new Alert("IO Status", "Hood disconnected", AlertType.kError);
+
+    driveController
+        .a()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  hoodDisconnectedAlert.set(true);
+                }));
 
     // Reset gyro to 0° when B button is pressed
     driveController

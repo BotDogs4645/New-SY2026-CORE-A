@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -28,6 +29,8 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final CoastOut coastRequest = new CoastOut();
   private final NeutralOut brakeRequest = new NeutralOut();
   private final VelocityVoltage shooterVelocityRequest = new VelocityVoltage(0.0);
+
+  private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   public ShooterIOTalonFX() {
     var shooterConfig = new TalonFXConfiguration();
@@ -48,12 +51,14 @@ public class ShooterIOTalonFX implements ShooterIO {
 
   @Override
   public void updateInputs(ShooterIOInputs inputs) {
-    BaseStatusSignal.refreshAll(shooterSupplyCurrent, shooterVelocityRotPerSec, shooterVoltage);
+    var status =
+        BaseStatusSignal.refreshAll(shooterSupplyCurrent, shooterVelocityRotPerSec, shooterVoltage);
 
     inputs.shooterSupplyCurrent = shooterSupplyCurrent.getValueAsDouble();
     inputs.shooterVelocityRadPerSec =
         Units.rotationsToRadians(shooterVelocityRotPerSec.getValueAsDouble());
     inputs.shooterAppliedVoltage = shooterVoltage.getValueAsDouble();
+    inputs.connected = connectedDebounce.calculate(status.isOK());
   }
 
   @Override
