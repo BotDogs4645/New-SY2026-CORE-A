@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -28,6 +29,8 @@ public class KickerIOTalonFX implements KickerIO {
   private final CoastOut coastRequest = new CoastOut();
   private final NeutralOut brakeRequest = new NeutralOut();
   private final VelocityVoltage kickerVelocityRequest = new VelocityVoltage(0.0);
+
+  private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   public KickerIOTalonFX() {
     var kickerConfig = new TalonFXConfiguration();
@@ -48,8 +51,10 @@ public class KickerIOTalonFX implements KickerIO {
 
   @Override
   public void updateInputs(KickerIOInputs inputs) {
-    BaseStatusSignal.refreshAll(kickerSupplyCurrent, kickerVelocityRotPerSec, kickerVoltage);
+    var status =
+        BaseStatusSignal.refreshAll(kickerSupplyCurrent, kickerVelocityRotPerSec, kickerVoltage);
 
+    inputs.connected = connectedDebounce.calculate(status.isOK());
     inputs.kickerSupplyCurrent = kickerSupplyCurrent.getValueAsDouble();
     inputs.kickerVelocityRadPerSec =
         Units.rotationsToRadians(kickerVelocityRotPerSec.getValueAsDouble());

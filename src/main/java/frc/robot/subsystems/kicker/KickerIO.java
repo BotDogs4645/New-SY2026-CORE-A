@@ -9,6 +9,7 @@ public interface KickerIO {
     public double kickerVelocityRadPerSec = 0.0;
     public double kickerSupplyCurrent = 0.0;
     public double kickerAppliedVoltage = 0.0;
+    public boolean connected = false;
   }
 
   public default void updateInputs(KickerIOInputs inputs) {}

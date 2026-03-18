@@ -11,7 +11,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -47,9 +48,7 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.util.Alerts;
 import frc.robot.util.AutoShotCalculator;
-import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -212,6 +211,16 @@ public class RobotContainer {
     // () -> -driveController.getLeftX(),
     // () -> Rotation2d.kZero));
 
+    Alert hoodDisconnectedAlert = new Alert("IO Status", "Hood disconnected", AlertType.kError);
+
+    driveController
+        .a()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  hoodDisconnectedAlert.set(true);
+                }));
+
     // Reset gyro to 0° when B button is pressed
     driveController
         .b()
@@ -240,42 +249,43 @@ public class RobotContainer {
     //               questNavIO.resetToZero();
     //             }));
 
-    driveController
-        .a()
-        .whileTrue(
-            Commands.runEnd(
-                    () -> {
-                      Translation3d target = getHubTarget();
-                      latestSolution =
-                          shotCalculator.calculate(
-                              drive.getPose(),
-                              drive.getChassisSpeeds(),
-                              target,
-                              hood.getCurrentHoodRotation());
-                      if (latestSolution.isSolutionFound()) {
-                        Alerts.AutoShot.outOfBoundsAlert.set(false);
-                        Alerts.AutoShot.turretCannotReachAlert.set(false);
-                        turret.setGoalPositionRad(latestSolution.turretAngleRad());
-                        Logger.recordOutput(
-                            "Turret/rawTargetPosition",
-                            Units.radiansToRotations(latestSolution.turretAngleRad()));
-                        hood.setGoalPosition((Math.PI / 2) - latestSolution.hoodAngleRad() - 0.065);
-                      } else {
-                        switch (latestSolution.constrainingFactor()) {
-                          case TURRET_RANGE:
-                            Alerts.AutoShot.turretCannotReachAlert.set(true);
-                          case LOCATION:
-                            Alerts.AutoShot.outOfBoundsAlert.set(true);
-                        }
-                      }
-                    },
-                    () -> {
-                      Alerts.AutoShot.outOfBoundsAlert.set(false);
-                      Alerts.AutoShot.turretCannotReachAlert.set(false);
-                    },
-                    turret,
-                    hood)
-                .withName("AutoAim"));
+    // driveController
+    //     .a()
+    //     .whileTrue(
+    //         Commands.runEnd(
+    //                 () -> {
+    //                   Translation3d target = getHubTarget();
+    //                   latestSolution =
+    //                       shotCalculator.calculate(
+    //                           drive.getPose(),
+    //                           drive.getChassisSpeeds(),
+    //                           target,
+    //                           hood.getCurrentHoodRotation());
+    //                   if (latestSolution.isSolutionFound()) {
+    //                     Alerts.AutoShot.outOfBoundsAlert.set(false);
+    //                     Alerts.AutoShot.turretCannotReachAlert.set(false);
+    //                     turret.setGoalPositionRad(latestSolution.turretAngleRad());
+    //                     Logger.recordOutput(
+    //                         "Turret/rawTargetPosition",
+    //                         Units.radiansToRotations(latestSolution.turretAngleRad()));
+    //                     hood.setGoalPosition((Math.PI / 2) - latestSolution.hoodAngleRad() -
+    // 0.065);
+    //                   } else {
+    //                     switch (latestSolution.constrainingFactor()) {
+    //                       case TURRET_RANGE:
+    //                         Alerts.AutoShot.turretCannotReachAlert.set(true);
+    //                       case LOCATION:
+    //                         Alerts.AutoShot.outOfBoundsAlert.set(true);
+    //                     }
+    //                   }
+    //                 },
+    //                 () -> {
+    //                   Alerts.AutoShot.outOfBoundsAlert.set(false);
+    //                   Alerts.AutoShot.turretCannotReachAlert.set(false);
+    //                 },
+    //                 turret,
+    //                 hood)
+    //             .withName("AutoAim"));
 
     // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose, drive.));
     // driveController.rightTrigger().onTrue(leds.BlinkLEDs());

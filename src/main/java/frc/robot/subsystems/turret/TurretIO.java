@@ -9,6 +9,7 @@ public interface TurretIO {
     public double positionRad = 0.0;
     public double velocityRadPerSec = 0.0;
     public String controlMode = "";
+    public boolean connected;
   }
 
   enum TurretOutputMode {

@@ -9,6 +9,7 @@ public interface SpindexerIO {
     public double supplyCurrent = 0.0;
     public double positionRad = 0.0;
     public double velocityRadPerSec = 0.0;
+    public boolean connected = false;
   }
 
   enum SpindexerOutputMode {

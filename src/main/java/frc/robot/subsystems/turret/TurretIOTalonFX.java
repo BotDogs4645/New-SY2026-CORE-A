@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -32,6 +33,8 @@ public class TurretIOTalonFX implements TurretIO {
   private final NeutralOut brakeRequest = new NeutralOut();
   private final CoastOut coastRequest = new CoastOut();
   private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
+
+  private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   public TurretIOTalonFX() {
     var motorConfig = new TalonFXConfiguration();
@@ -62,18 +65,19 @@ public class TurretIOTalonFX implements TurretIO {
 
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(turretMotor);
-    Logger.recordOutput("Turret/IO/talonFXInitialized", true);
+    Logger.recordOutput("Turret/talonFXInitialized", true);
     turretMotor.setControl(brakeRequest);
   }
 
   @Override
   public void updateInputs(TurretIOInputs inputs) {
-    BaseStatusSignal.refreshAll(supplyCurrent, positionRot, velocityRotPerSec);
+    var status = BaseStatusSignal.refreshAll(supplyCurrent, positionRot, velocityRotPerSec);
 
     inputs.positionRad = Units.rotationsToRadians(positionRot.getValueAsDouble());
     inputs.velocityRadPerSec = Units.rotationsToRadians(velocityRotPerSec.getValueAsDouble());
     inputs.supplyCurrent = supplyCurrent.getValueAsDouble();
     inputs.controlMode = activeControl.getValue().toString();
+    inputs.connected = connectedDebounce.calculate(status.isOK());
   }
 
   @Override

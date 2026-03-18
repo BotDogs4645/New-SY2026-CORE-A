@@ -13,10 +13,12 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import org.littletonrobotics.junction.Logger;
 
 public class SpindexerIOTalonFX implements SpindexerIO {
   private final TalonFX spindexerMotor =
@@ -29,6 +31,8 @@ public class SpindexerIOTalonFX implements SpindexerIO {
   private final NeutralOut brakeControl = new NeutralOut();
   private final DutyCycleOut dutyCycleControl = new DutyCycleOut(0);
   private final CoastOut coastControl = new CoastOut();
+
+  private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   public SpindexerIOTalonFX() {
     var motorConfig = new TalonFXConfiguration();
@@ -46,15 +50,17 @@ public class SpindexerIOTalonFX implements SpindexerIO {
 
     BaseStatusSignal.setUpdateFrequencyForAll(50.0, supplyCurrent, positionRot, velocityRotPerSec);
     ParentDevice.optimizeBusUtilizationForAll(spindexerMotor);
+    Logger.recordOutput("Spindexer/talonFXInitialized", true);
   }
 
   @Override
   public void updateInputs(SpindexerIOInputs inputs) {
-    BaseStatusSignal.refreshAll(supplyCurrent, positionRot, velocityRotPerSec);
+    var status = BaseStatusSignal.refreshAll(supplyCurrent, positionRot, velocityRotPerSec);
 
     inputs.positionRad = Units.rotationsToRadians(positionRot.getValueAsDouble());
     inputs.velocityRadPerSec = Units.rotationsToRadians(velocityRotPerSec.getValueAsDouble());
     inputs.supplyCurrent = Units.rotationsToRadians(supplyCurrent.getValueAsDouble());
+    inputs.connected = connectedDebounce.calculate(status.isOK());
   }
 
   @Override
