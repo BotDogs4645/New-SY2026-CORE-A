@@ -55,9 +55,12 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
@@ -84,8 +87,7 @@ public class RobotContainer {
 
   private final AutoShotCalculator shotCalculator;
   private AutoShotCalculator.ShotSolution latestSolution = AutoShotCalculator.ShotSolution.none();
-  private static final LoggedTunableNumber hoodOffset =
-      new LoggedTunableNumber("AutoShot/hoodOffset", 0.122);
+  private static final LoggedTunableNumber hoodOffset = new LoggedTunableNumber("AutoShot/hoodOffset", 0.122);
 
   // private final Trigger isUnableToShoot = new
   // Trigger(shotCalculator::isUnableToShoot);
@@ -93,7 +95,9 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
 
     switch (Constants.currentMode) {
@@ -101,13 +105,12 @@ public class RobotContainer {
         // Real robot, instantiate hardware IO implementations
         // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
         // a CANcoder
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
+        drive = new Drive(
+            new GyroIOPigeon2(),
+            new ModuleIOTalonFX(TunerConstants.FrontLeft),
+            new ModuleIOTalonFX(TunerConstants.FrontRight),
+            new ModuleIOTalonFX(TunerConstants.BackLeft),
+            new ModuleIOTalonFX(TunerConstants.BackRight));
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -130,24 +133,28 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIOSim(TunerConstants.FrontLeft),
+            new ModuleIOSim(TunerConstants.FrontRight),
+            new ModuleIOSim(TunerConstants.BackLeft),
+            new ModuleIOSim(TunerConstants.BackRight));
         break;
 
       default:
         // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            });
         break;
     }
 
@@ -167,13 +174,14 @@ public class RobotContainer {
     intake = new Intake(new IntakeIOTalonFX());
     leds = new Leds();
 
-    //named command registration
+    // named command registration
     NamedCommands.registerCommand("ExtendIntake", intake.ExtendIntake());
-    NamedCommands.registerCommand("RunIntake", intake.RunIntake(()-> false));
+    NamedCommands.registerCommand("RunIntake", intake.RunIntake(() -> false));
     NamedCommands.registerCommand("StartIntake", intake.StartIntake());
     NamedCommands.registerCommand("StopIntake", intake.StopIntake());
     NamedCommands.registerCommand("AutoAim", AutoAim());
     NamedCommands.registerCommand("FeedBallsToShooter", FeedBallsToShooter());
+    NamedCommands.registerCommand("AimAndShootBalls4Sec", AimAndShootBalls(4));
 
     shotCalculator = new AutoShotCalculator(turret);
 
@@ -203,9 +211,11 @@ public class RobotContainer {
   }
 
   /**
-   * Use this method to define your button->command mappings. Buttons can be created by
+   * Use this method to define your button->command mappings. Buttons can be
+   * created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+   * it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
@@ -232,10 +242,9 @@ public class RobotContainer {
         .b()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
+                () -> drive.setPose(
+                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                drive)
                 .ignoringDisable(true));
 
     // driveController.x().onTrue(leds.BlinkLEDs());
@@ -244,15 +253,15 @@ public class RobotContainer {
     // operatorPanel.button(6).whileTrue(OldShootBalls());
     // operatorPanel.button(10).whileTrue(intake.RunIntake());
     // driveController.leftBumper().onTrue(intake.ExtendIntake());
-    driveController.rightTrigger().whileTrue(intake.RunIntake(driveController.x()));
+    driveController.leftTrigger().whileTrue(intake.RunIntake(driveController.x()));
 
-    driveController.rightBumper().onTrue(intake.ExtendIntake());
+    operatorController.rightBumper().onTrue(intake.ExtendIntake());
 
     driveController
-        .leftTrigger()
+        .rightTrigger()
         .whileTrue(FeedBallsToShooter());
 
-    driveController.y().whileTrue(intake.RunOuttake(driveController.x()));
+    driveController.leftBumper().whileTrue(intake.RunOuttake(operatorController.x()));
     // driveController
     // .y()
     // .onTrue(
@@ -261,7 +270,7 @@ public class RobotContainer {
     // questNavIO.resetToZero();
     // }));
 
-    driveController
+    operatorController
         .a()
         .whileTrue(AutoAim());
 
@@ -279,55 +288,33 @@ public class RobotContainer {
     return autoChooser.get();
   }
 
+  public Command AimAndShootBalls(double timeout) {
+    return Commands.parallel(
+      AutoAim(),
+      Commands.sequence(
+        Commands.waitSeconds(2),
+        FeedBallsToShooter()
+      )
+    ).withTimeout(timeout);
+  }
+
   public Command FeedBallsToShooter() {
     return Commands.parallel(
-                kicker.RunKicker(),
-                Commands.sequence(
-                    Commands.waitUntil(kicker::atGoalSpeed), spindexer.RunSpindexer()));
-
+        kicker.RunKicker(),
+        Commands.sequence(
+            Commands.waitUntil(kicker::atGoalSpeed), spindexer.RunSpindexer()));
   }
 
   public Command AutoAim() {
     return Commands.runEnd(
-                    () -> {
-                      Translation3d target = getHubTarget();
-                      latestSolution =
-                          shotCalculator.calculate(
-                              drive.getPose(),
-                              drive.getChassisSpeeds(),
-                              target,
-                              hood.getCurrentHoodRotation());
-
-                      if (latestSolution.isSolutionFound()) {
-                        Alerts.AutoShot.outOfBoundsAlert.set(false);
-                        Alerts.AutoShot.turretCannotReachAlert.set(false);
-                        turret.setGoalPositionRad(latestSolution.turretAngleRad());
-                        double hoodGoalPosition =
-                            (Math.PI / 2)
-                                - latestSolution.hoodAngleRad()
-                                - hoodOffset.getAsDouble();
-                        Logger.recordOutput(
-                            "Turret/targetPositionRad", latestSolution.turretAngleRad());
-                        Logger.recordOutput("Hood/targetPositionRad", hoodGoalPosition);
-                        hood.setGoalPosition(hoodGoalPosition);
-                        shooter.setShooterGoalSpeedRadPerSec(
-                            latestSolution.flywheelVelocityRadPerSec());
-                      } else {
-                        switch (latestSolution.constrainingFactor()) {
-                          case TURRET_RANGE:
-                            Alerts.AutoShot.turretCannotReachAlert.set(true);
-                          case LOCATION:
-                            Alerts.AutoShot.outOfBoundsAlert.set(true);
-                        }
-                      }
-                    },
-                    () -> {
-                      Alerts.AutoShot.outOfBoundsAlert.set(false);
-                      Alerts.AutoShot.turretCannotReachAlert.set(false);
-                      shooter.setShooterGoalSpeedRadPerSec(0);
-                    },
-                    turret)
-                .withName("AutoAim");
+        () -> {
+          autoAimShooter();
+        },
+        () -> {
+          stopAutoAim();
+        },
+        turret)
+        .withName("AutoAim");
   }
 
   public Command ShootBalls() {
@@ -340,16 +327,53 @@ public class RobotContainer {
 
   public Command OldShootBalls() {
     return new SequentialCommandGroup(
-            shooter.StartShooter(),
-            new WaitCommand(0.2),
-            kicker.StartKicker(),
-            spindexer.StartSpindexer())
+        shooter.StartShooter(),
+        new WaitCommand(0.2),
+        kicker.StartKicker(),
+        spindexer.StartSpindexer())
         .andThen(Commands.idle())
         .finallyDo(() -> CommandScheduler.getInstance().schedule(StopShooting()));
   }
 
   public Command StopShooting() {
     return Commands.parallel(shooter.StopShooter(), kicker.StopKicker(), spindexer.StopSpindexer());
+  }
+
+  public void autoAimShooter() {
+    Translation3d target = getHubTarget();
+    latestSolution = shotCalculator.calculate(
+        drive.getPose(),
+        drive.getChassisSpeeds(),
+        target,
+        hood.getCurrentHoodRotation());
+
+    if (latestSolution.isSolutionFound()) {
+      Alerts.AutoShot.outOfBoundsAlert.set(false);
+      Alerts.AutoShot.turretCannotReachAlert.set(false);
+      turret.setGoalPositionRad(latestSolution.turretAngleRad());
+      double hoodGoalPosition = (Math.PI / 2)
+          - latestSolution.hoodAngleRad()
+          - hoodOffset.getAsDouble();
+      Logger.recordOutput(
+          "Turret/targetPositionRad", latestSolution.turretAngleRad());
+      Logger.recordOutput("Hood/targetPositionRad", hoodGoalPosition);
+      hood.setGoalPosition(hoodGoalPosition);
+      shooter.setShooterGoalSpeedRadPerSec(
+          latestSolution.flywheelVelocityRadPerSec());
+    } else {
+      switch (latestSolution.constrainingFactor()) {
+        case TURRET_RANGE:
+          Alerts.AutoShot.turretCannotReachAlert.set(true);
+        case LOCATION:
+          Alerts.AutoShot.outOfBoundsAlert.set(true);
+      }
+    }
+  }
+
+  public void stopAutoAim() {
+    Alerts.AutoShot.outOfBoundsAlert.set(false);
+    Alerts.AutoShot.turretCannotReachAlert.set(false);
+    shooter.setShooterGoalSpeedRadPerSec(0);
   }
 
   private Translation3d getHubTarget() {

@@ -1,0 +1,43 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LowerScore"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ExtendIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AimAndShootBalls4Sec"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MiddleHumanScorePath2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AimAndShootBalls4Sec"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

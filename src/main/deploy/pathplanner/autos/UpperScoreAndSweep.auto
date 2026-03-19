@@ -1,0 +1,61 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "UpperScore"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ExtendIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AimAndShootBalls4Sec"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "UpperScoreAndSweepPath2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StartIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "UpperScoreAndSweepPath3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "UpperScoreAndSweepPath4"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
