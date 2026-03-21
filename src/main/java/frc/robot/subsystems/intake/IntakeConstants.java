@@ -13,8 +13,8 @@ public final class IntakeConstants {
 
   public static final double armKP = 5.0;
   public static final double armKG = 0.1;
-  public static final double armMotionMagicCruiseVelocity = 8.0;
-  public static final double armMotionMagicAcceleration = 2.0;
+  public static final double armMotionMagicCruiseVelocity = 13.0;
+  public static final double armMotionMagicAcceleration = 5.0;
   public static final double armPeakForwardVoltage = 3.0;
   public static final double armPeakReverseVoltage = -3.0;
 
@@ -33,7 +33,7 @@ public final class IntakeConstants {
     ARM_UP(0.0),
     ARM_HALF_DOWN(27.37),
     DISLODGE_BALLS(85),
-    ARM_DOWN(99.46);
+    ARM_DOWN(90);
 
     public final Double motorPositionRad;
 

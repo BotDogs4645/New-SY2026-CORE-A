@@ -7,31 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LowerScore"
+            "pathName": "DownBumpScore"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "ExtendIntake"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AimAndShootBalls4Sec"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "MiddleHumanScorePath2"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
           }
         },
         {

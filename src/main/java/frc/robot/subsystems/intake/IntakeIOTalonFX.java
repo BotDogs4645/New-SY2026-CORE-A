@@ -5,6 +5,7 @@ import static frc.robot.util.PhoenixUtil.*;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -32,7 +33,9 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<AngularVelocity> rollerVelocityRotPerSec = rollerMotor.getVelocity();
   private final StatusSignal<Voltage> rollerVoltage = rollerMotor.getMotorVoltage();
   private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
+  private final DutyCycleOut armDutyCycleOut = new DutyCycleOut(0);
   private final NeutralOut neutralOut = new NeutralOut();
+  private final CoastOut coastOut = new CoastOut();
   private final MotionMagicVoltage armRequest = new MotionMagicVoltage(0.0);
   private final StatusSignal<Current> armSupplyCurrent = armMotor.getSupplyCurrent();
   private final StatusSignal<AngularVelocity> armVelocityRotPerSec = armMotor.getVelocity();
@@ -50,33 +53,41 @@ public class IntakeIOTalonFX implements IntakeIO {
     switch (outputs.rollerMode) {
       case COAST -> {
         // make sure motor is in coast if you want it truly coasting
-        Logger.recordOutput("Intake/IOoutputMode", "COAST");
-        rollerMotor.setNeutralMode(NeutralModeValue.Coast);
-        rollerMotor.setControl(neutralOut);
+        Logger.recordOutput("Intake/RollerOutputMode", "COAST");
+        rollerMotor.setControl(coastOut);
       }
       case BRAKE -> {
-        Logger.recordOutput("Intake/IOoutputMode", "BRAKE");
-        rollerMotor.setNeutralMode(NeutralModeValue.Brake);
+        Logger.recordOutput("Intake/RollerOutputMode", "BRAKE");
         rollerMotor.setControl(neutralOut);
       }
       case DUTY_CYCLE -> {
-        Logger.recordOutput("Intake/IOoutputMode", "DUTYCYCLE");
-        Logger.recordOutput("Intake/IOoutputSpeed", outputs.rollerOutputLevel);
+        Logger.recordOutput("Intake/RollerOutputMode", "DUTYCYCLE");
         rollerMotor.setControl(dutyCycleRequest.withOutput(outputs.rollerOutputLevel));
       }
     }
     switch (outputs.armMode) {
       case POSITION -> {
         double rotations = Units.radiansToRotations(outputs.armGoalPosition.motorPositionRad);
+        Logger.recordOutput("Intake/ArmOutputMode", "POSITION");
+        Logger.recordOutput(
+            "Intake/ArmTargetPositionRad", outputs.armGoalPosition.motorPositionRad);
         armMotor.setControl(armRequest.withPosition(rotations));
+        break;
       }
       case COAST -> {
-        armMotor.setNeutralMode(NeutralModeValue.Coast);
-        armMotor.setControl(neutralOut);
+        Logger.recordOutput("Intake/ArmOutputMode", "COAST");
+        armMotor.setControl(coastOut);
+        break;
       }
       case BRAKE -> {
-        armMotor.setNeutralMode(NeutralModeValue.Brake);
+        Logger.recordOutput("Intake/ArmOutputMode", "BRAKE");
         armMotor.setControl(neutralOut);
+        break;
+      }
+      case DUTY_CYCLE -> {
+        Logger.recordOutput("Intake/ArmOutputMode", "DUTYCYCLE");
+        armMotor.setControl(armDutyCycleOut.withOutput(outputs.armOutputPower));
+        break;
       }
       case CLOSED_LOOP -> {
         armMotor.setControl(neutralOut);
@@ -91,6 +102,7 @@ public class IntakeIOTalonFX implements IntakeIO {
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
     // intake config here
+    intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     tryUntilOk(5, () -> rollerMotor.getConfigurator().apply(intakeConfig, 0.25));
 
     var armConfig = new TalonFXConfiguration();
@@ -98,6 +110,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     armConfig.Slot0.kP = IntakeConstants.armKP;
     armConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
     armConfig.Slot0.kG = IntakeConstants.armKG;
+    armConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     armConfig.Voltage.PeakForwardVoltage = IntakeConstants.armPeakForwardVoltage;
     armConfig.Voltage.PeakReverseVoltage = IntakeConstants.armPeakReverseVoltage;
@@ -147,5 +160,10 @@ public class IntakeIOTalonFX implements IntakeIO {
   @Override
   public void setIntakeControl(ControlRequest control) {
     rollerMotor.setControl(control);
+  }
+
+  @Override
+  public void setArmEncoderPosition(double positionRad) {
+    armMotor.setPosition(Units.radiansToRotations(positionRad));
   }
 }

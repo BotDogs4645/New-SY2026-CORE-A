@@ -1,237 +1,104 @@
 package frc.robot.subsystems.vision;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.DoubleSubscriber;
-import edu.wpi.first.networktables.FloatArraySubscriber;
-import edu.wpi.first.networktables.IntegerPublisher;
-import edu.wpi.first.networktables.IntegerSubscriber;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.PubSubOption;
-import edu.wpi.first.networktables.TimestampedDouble;
-import edu.wpi.first.networktables.TimestampedFloatArray;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
+import gg.questnav.questnav.PoseFrame;
+import gg.questnav.questnav.QuestNav;
+import java.util.LinkedList;
+import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
-/** IO implementation for real Limelight hardware. */
+/** IO implementation for QuestNav */
 public class VisionIOQuestNav implements VisionIO {
-  public record QuestNavData(
-      Pose3d pose,
-      double batteryPercent,
-      double timestamp,
-      float[] translation,
-      float[] rotation) {}
+  private final QuestNav questNav;
+  private final Transform3d robotToQuest;
+  private final Alert lowBatteryAlert =
+      new Alert("QuestNav battery below 50%! Charge it!!!", AlertType.kWarning);
+  private final String name;
+  private Transform3d calibrationTransform = new Transform3d();
 
-  // Configure Network Tables topics (questnav/...) to communicate with the Quest HMD
-  private NetworkTableInstance nt4Instance = NetworkTableInstance.getDefault();
-  private NetworkTable nt4Table = nt4Instance.getTable("questnav");
-  private IntegerSubscriber questMiso = nt4Table.getIntegerTopic("miso").subscribe(0);
-  private IntegerPublisher questMosi =
-      nt4Table
-          .getIntegerTopic("mosi")
-          .publish(PubSubOption.keepDuplicates(true), PubSubOption.sendAll(true));
-
-  // Subscribe to the Network Tables questnav data topics
-  private DoubleSubscriber questTimestamp = nt4Table.getDoubleTopic("timestamp").subscribe(0.0f);
-  private FloatArraySubscriber questPosition =
-      nt4Table.getFloatArrayTopic("position").subscribe(new float[] {0.0f, 0.0f, 0.0f});
-  private FloatArraySubscriber questAngles =
-      nt4Table.getFloatArrayTopic("eulerAngles").subscribe(new float[] {0.0f, 0.0f, 0.0f});
-  private DoubleSubscriber questBatteryPercent =
-      nt4Table.getDoubleTopic("device/batteryPercent").subscribe(0.0f);
-
-  /** Subscriber for heartbeat requests */
-  private final DoubleSubscriber heartbeatRequestSub =
-      nt4Table.getDoubleTopic("heartbeat/quest_to_robot").subscribe(0.0);
-  /** Publisher for heartbeat responses */
-  private final DoublePublisher heartbeatResponsePub =
-      nt4Table.getDoubleTopic("heartbeat/robot_to_quest").publish();
-  /** Last processed heartbeat request ID */
-  private double lastProcessedHeartbeatId = 0;
-
-  private final Transform3d robotToCamera;
-
-  private final VisionIO absoluteVisionIO;
-  private final VisionIOInputsAutoLogged absoluteInputs = new VisionIOInputsAutoLogged();
-
-  private Translation3d[] questNavRawToFieldCoordinateSystemQueue = new Translation3d[15];
-  private Translation3d questNavRawToFieldCoordinateSystem = new Translation3d();
-
-  int count = 0;
-  int idx = 0;
-
-  protected Rotation3d gyroResetAngle = new Rotation3d();
-  protected Pose3d lastPose3d = new Pose3d();
-
-  public VisionIOQuestNav(Transform3d robotToCamera, VisionIO absoluteVisionIO) {
-    // Initialize the camera to robot transform
-    this.robotToCamera = robotToCamera;
-    this.absoluteVisionIO = absoluteVisionIO;
+  public VisionIOQuestNav(String name) {
+    this.name = name;
+    this.questNav = new QuestNav();
+    this.robotToQuest = VisionConstants.robotToQuestTransform;
   }
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
-    QuestNavData[] questNavData = getQuestNavData();
+    questNav.commandPeriodic();
+    inputs.name = name;
 
-    // Update the absolute vision IO
-    absoluteVisionIO.updateInputs(absoluteInputs);
-    Logger.processInputs("QuestNav/absolute", absoluteInputs);
-
-    inputs.connected = connected();
-    inputs.latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d());
-    inputs.poseObservations = new PoseObservation[questNavData.length];
-
-    if (absoluteInputs.poseObservations.length > 0 && questNavData.length > 0) {
-      questNavRawToFieldCoordinateSystemQueue[idx] =
-          absoluteInputs
-              .poseObservations[0]
-              .pose()
-              .getTranslation()
-              .minus(questNavData[0].pose.getTranslation().rotateBy(gyroResetAngle));
-      count += 1;
-      idx += 1;
-      if (idx == questNavRawToFieldCoordinateSystemQueue.length) {
-        idx = 0;
-      }
-      questNavRawToFieldCoordinateSystem = new Translation3d();
-      for (int i = 0; i < Math.min(count, questNavRawToFieldCoordinateSystemQueue.length); i++) {
-        questNavRawToFieldCoordinateSystem =
-            questNavRawToFieldCoordinateSystem.plus(questNavRawToFieldCoordinateSystemQueue[i]);
-      }
-      questNavRawToFieldCoordinateSystem =
-          questNavRawToFieldCoordinateSystem.div(
-              Math.min(count, questNavRawToFieldCoordinateSystemQueue.length));
-      Logger.recordOutput("QuestNav/RawToField", questNavRawToFieldCoordinateSystem);
+    inputs.connected = questNav.isConnected();
+    questNav.getBatteryPercent().ifPresent(battery -> lowBatteryAlert.set(battery < 50.0));
+    if (questNav.getBatteryPercent().isPresent()) {
+      inputs.batteryLevel = questNav.getBatteryPercent().getAsInt();
     }
 
-    for (int i = 0; i < questNavData.length; i++) {
-      inputs.poseObservations[i] =
+    PoseFrame[] frames = questNav.getAllUnreadPoseFrames();
+    List<PoseObservation> observations = new LinkedList<>();
+
+    for (PoseFrame frame : frames) {
+      if (!frame.isTracking()) continue;
+
+      Pose3d questPose = frame.questPose3d();
+      Logger.recordOutput("Vision/QuestNav/RawQuestPose", questPose);
+      Pose3d robotPose =
+          questPose.transformBy(robotToQuest.inverse()).transformBy(calibrationTransform);
+
+      observations.add(
           new PoseObservation(
-              questNavData[i].timestamp(),
-              new Pose3d(
-                  questNavData[i]
-                      .pose()
-                      .getTranslation()
-                      .rotateBy(gyroResetAngle)
-                      .plus(questNavRawToFieldCoordinateSystem),
-                  questNavData[i].pose().getRotation().plus(gyroResetAngle)),
-              0.0,
-              -1,
-              0.0,
-              PoseObservationType.QUESTNAV);
-
-      lastPose3d = inputs.poseObservations[i].pose();
+              frame.dataTimestamp(),
+              robotPose,
+              0.0, // no ambiguity concept
+              2, // placeholder tagCount
+              0.0, // no distance metric
+              PoseObservationType.QUESTNAV));
     }
+
+    inputs.poseObservations = observations.toArray(new PoseObservation[0]);
     inputs.tagIds = new int[0];
-
-    Logger.recordOutput("QuestNav/battery", getBatteryPercent());
-
-    cleanUpQuestNavMessages();
-    processHeartbeat();
   }
 
-  private QuestNavData[] getQuestNavData() {
-    TimestampedDouble[] timestamps = questTimestamp.readQueue();
-    TimestampedFloatArray[] positions = questPosition.readQueue();
-    TimestampedFloatArray[] angles = questAngles.readQueue();
-    // TimestampedDouble[] battery = questBatteryPercent.readQueue();
-
-    double battery = getBatteryPercent();
-
-    int length = Math.min(timestamps.length, Math.min(positions.length, angles.length));
-
-    QuestNavData[] data = new QuestNavData[length];
-
-    for (int i = 0; i < length; i++) {
-      data[i] =
-          new QuestNavData(
-              getQuestNavPose(positions[i].value, angles[i].value).plus(robotToCamera.inverse()),
-              battery,
-              timestamps[i].timestamp,
-              positions[i].value,
-              angles[i].value);
-    }
-
-    return data;
+  /** reset QuestNav pose */
+  public void setPose(Pose3d robotPose) {
+    Pose3d questPose = robotPose.transformBy(robotToQuest);
+    questNav.setPose(questPose);
   }
 
-  // Gets the battery percent of the Quest.
-  private double getBatteryPercent() {
-    return questBatteryPercent.get();
+  public void setInitialPose(Pose2d robotPose) {
+    Pose3d desiredRobotPose =
+        new Pose3d(
+            robotPose.getX(),
+            robotPose.getY(),
+            0,
+            new Rotation3d(0, 0, robotPose.getRotation().getRadians()));
+    setPose(desiredRobotPose);
+    // PoseFrame[] frames = questNav.getAllUnreadPoseFrames();
+    // if (frames.length > 0) {
+    //   PoseFrame latestFrame = frames[frames.length - 1];
+    //   if (latestFrame.isTracking()) {
+    //     Pose3d questPose = latestFrame.questPose3d();
+    //     Pose3d currentRobotPose = questPose.transformBy(robotToQuest.inverse());
+    //     Pose3d desiredRobotPose =
+    //         new Pose3d(
+    //             robotPose.getX(),
+    //             robotPose.getY(),
+    //             0,
+    //             new Rotation3d(0, 0, robotPose.getRotation().getRadians()));
+
+    //     calibrationTransform = new Transform3d(currentRobotPose, desiredRobotPose);
+    //     Logger.recordOutput("Vision/QuestNav/CalibrationTransform", calibrationTransform);
+    //   }
+    // }
   }
 
-  // Returns if the Quest is connected.
-  private boolean connected() {
-    return ((RobotController.getFPGATime() - questBatteryPercent.getLastChange()) / 1000) < 250;
-  }
-
-  // Clean up questnav subroutine messages after processing on the headset
-  private void cleanUpQuestNavMessages() {
-    if (questMiso.get() == 99) {
-      questMosi.set(0);
-    }
-  }
-
-  private Translation3d getQuestNavTranslation(float[] position) {
-    return new Translation3d(position[2], -position[0], position[1]);
-  }
-
-  // Gets the Rotation of the Quest.
-  public Rotation3d getQuestNavRotation(float[] angles) {
-    return new Rotation3d(
-        Units.degreesToRadians(-angles[2]),
-        Units.degreesToRadians(angles[0]),
-        Units.degreesToRadians(-angles[1]));
-  }
-
-  private Pose3d getQuestNavPose(float[] position, float[] angles) {
-    var oculousPositionCompensated = getQuestNavTranslation(position); // 6.5
-    return new Pose3d(oculousPositionCompensated, getQuestNavRotation(angles));
-  }
-
-  /** Process heartbeat requests from Quest and respond with the same ID */
-  public void processHeartbeat() {
-    double requestId = heartbeatRequestSub.get();
-    // Only respond to new requests to avoid flooding
-    if (requestId > 0 && requestId != lastProcessedHeartbeatId) {
-      heartbeatResponsePub.set(requestId);
-      lastProcessedHeartbeatId = requestId;
-    }
-  }
-
-  public void resetPose(Pose3d pose) {
-    questMosi.accept(3);
-
-    questNavRawToFieldCoordinateSystem =
-        pose.getTranslation()
-            .minus(lastPose3d.getTranslation().minus(questNavRawToFieldCoordinateSystem));
-
-    count = 0;
-    idx = 0;
-  }
-
-  public void resetHeading(Rotation2d heading) {
-    questMosi.accept(3);
-
-    gyroResetAngle =
-        (lastPose3d.getRotation().minus(gyroResetAngle).minus(new Rotation3d(heading)))
-            .unaryMinus();
-  }
-
-  public void resetHeading() {
-    resetHeading(
-        DriverStation.getAlliance().get() == Alliance.Red ? Rotation2d.kPi : Rotation2d.kZero);
-  }
-
-  public void resetBlue() {
-    resetHeading(Rotation2d.kZero);
+  public void resetToZero() {
+    Pose3d pose = new Pose3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0));
+    setPose(pose);
   }
 }

@@ -62,9 +62,11 @@ public class HoodIOTalonFX implements HoodIO {
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         HoodConstants.fowardSoftLimit + startingOffset;
+    Logger.recordOutput("Hood/forwardSoftLimit", HoodConstants.fowardSoftLimit + startingOffset);
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
         HoodConstants.reverseSoftLimit + startingOffset;
+    Logger.recordOutput("Hood/reverseSoftLimit", HoodConstants.reverseSoftLimit + startingOffset);
 
     tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(motorConfig, 0.25));
 

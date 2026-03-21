@@ -40,6 +40,16 @@ public class Leds extends SubsystemBase {
         runOnce(() -> candle.setControl(rainbowAnimation)));
   }
 
+  public Command RedLEDs() {
+    return runEnd(
+        () -> {
+          candle.setControl(redPreMatch);
+        },
+        () -> {
+          candle.setControl(rainbowAnimation);
+        });
+  }
+
   // public Command MatchLedsToAlliance(Alliance alliance) {
   //   ControlRequest activeControl;
   //   switch(alliance) {

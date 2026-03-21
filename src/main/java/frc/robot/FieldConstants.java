@@ -139,6 +139,40 @@ public class FieldConstants {
         AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(21).get().toPose2d();
   }
 
+  public static class PassTarget {
+    // Relevant reference points on the opposite side
+    private static final double height = 0.5;
+    private static final double yOffset = 1;
+
+    public static final Translation3d leftPassTargetBlue =
+        new Translation3d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(23).get().getX(),
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(23).get().getY() - yOffset,
+            height);
+
+    // Relevant reference points on the opposite side
+    public static final Translation3d rightPassTargetBlue =
+        new Translation3d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(28).get().getX(),
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(28).get().getY() + yOffset,
+            height);
+
+    public static final Translation3d leftPassTargetRed =
+        new Translation3d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(7).get().getX(),
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(7).get().getY() + yOffset,
+            height);
+
+    public static final Translation3d rightPassTargetRed =
+        new Translation3d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(12).get().getX(),
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(12).get().getY() - yOffset,
+            height);
+
+    public static final Translation3d[] bluePassTargets = {leftPassTargetBlue, rightPassTargetBlue};
+    public static final Translation3d[] redPassTargets = {leftPassTargetRed, rightPassTargetRed};
+  }
+
   /** Left Bump related constants */
   public static class LeftBump {
 

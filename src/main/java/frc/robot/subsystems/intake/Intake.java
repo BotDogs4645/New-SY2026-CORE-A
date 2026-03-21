@@ -21,6 +21,7 @@ public class Intake extends FullSubsystem {
   // Goals
   private double rollerOutputLevel = 0.0;
   private ArmMechanismPosition armGoalPosition = ArmMechanismPosition.ARM_UP;
+  private double armOutputPower = 0.0;
   private IntakeOutputMode armOutputMode = IntakeOutputMode.COAST;
   // State helpers but its lowkenuinely dead code rn
   private boolean rollerAtGoal = false;
@@ -58,6 +59,7 @@ public class Intake extends FullSubsystem {
     }
     outputs.armMode = armOutputMode;
     outputs.armGoalPosition = armGoalPosition;
+    outputs.armOutputPower = armOutputPower;
     io.applyOutputs(outputs);
   }
 
@@ -70,9 +72,19 @@ public class Intake extends FullSubsystem {
     this.armGoalPosition = armGoalPosition;
   }
 
+  public void setArmDutyCycleOut(double power) {
+    armOutputMode = IntakeOutputMode.DUTY_CYCLE;
+    this.armOutputPower = power;
+  }
+
   @AutoLogOutput
   public boolean armAtGoal() {
     return Math.abs(inputs.armAngleRad - armGoalPosition.motorPositionRad) < 1;
+  }
+
+  @AutoLogOutput
+  public boolean isStalling() {
+    return inputs.armSupplyCurrent > 1.79;
   }
 
   @AutoLogOutput
@@ -91,10 +103,11 @@ public class Intake extends FullSubsystem {
             runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_HALF_DOWN)),
             Commands.waitUntil(this::armAtGoal),
             runOnce(() -> setRollerOutput(IntakeConstants.armDownRollerOutput)),
-            runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_DOWN)),
-            Commands.waitUntil(this::armAtGoal),
+            runOnce(() -> setArmDutyCycleOut(0.054)),
+            Commands.waitUntil(this::isStalling),
             runOnce(
                 () -> {
+                  io.setArmEncoderPosition(ArmMechanismPosition.ARM_DOWN.motorPositionRad);
                   setRollerOutput(0);
                   armOutputMode = IntakeOutputMode.COAST;
                   hasExtendedIntake = true;
@@ -120,11 +133,7 @@ public class Intake extends FullSubsystem {
     return runEnd(
         () -> {
           setRollerOutput(IntakeConstants.intakingRollerOutput);
-          if (dislodgeBalls.getAsBoolean()) {
-            setArmGoalPosition(ArmMechanismPosition.DISLODGE_BALLS);
-          } else {
-            setArmGoalPosition(ArmMechanismPosition.ARM_DOWN);
-          }
+          armOutputMode = IntakeOutputMode.COAST;
         },
         () -> {
           setRollerOutput(0);
@@ -135,11 +144,7 @@ public class Intake extends FullSubsystem {
     return runEnd(
         () -> {
           setRollerOutput(-IntakeConstants.intakingRollerOutput);
-          if (dislodgeBalls.getAsBoolean()) {
-            setArmGoalPosition(ArmMechanismPosition.DISLODGE_BALLS);
-          } else {
-            setArmGoalPosition(ArmMechanismPosition.ARM_DOWN);
-          }
+          armOutputMode = IntakeOutputMode.COAST;
         },
         () -> {
           setRollerOutput(0);

@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.FieldConstants;
@@ -81,8 +82,12 @@ public class AutoShotCalculator {
 
   enum ShooterDistanceCutoff {
     L1(2, 7),
-    L2(4, 7.5),
-    L3(6, 12),
+    L2(2.5, 7.7),
+    L3(3, 8.2),
+    L4(3.2, 8.5),
+    L5(3.4, 8.8),
+    L6(4, 9),
+    L7(6, 10),
     DEFAULT(Double.POSITIVE_INFINITY, 8);
     final double maxDistance, speedMps;
 
@@ -124,11 +129,14 @@ public class AutoShotCalculator {
     Timer timer = new Timer();
     timer.start();
     // ensure robot is on correct side
-    Optional<Alliance> driverStationAlliance = Optional.of(Alliance.Blue);
+    Optional<Alliance> driverStationAlliance = DriverStation.getAlliance();
     Alliance currentAllianceSide = FieldConstants.getAllianceSide(robotPose);
     boolean isAtValidPosition =
         !(driverStationAlliance.isPresent() && driverStationAlliance.get() != currentAllianceSide);
-    if (!isAtValidPosition) {
+
+    // Fixed for passing. Idk why we would stop them from shooting if they are on the wrong side for
+    // auto-aiming, but whatever -CR
+    if (!isAtValidPosition && false) {
       Logger.recordOutput("AutoShot/solutionFound", false);
       Logger.recordOutput("AutoShot/constrainingFactor", ConstrainingFactor.LOCATION);
       timer.stop();
@@ -334,6 +342,7 @@ public class AutoShotCalculator {
 
     double maxDist = simulateTrajectory(closestCutoff.speedMps, pitchRad, targetHeight);
     if (Math.abs(maxDist - targetDistance) <= 0.15) {
+      Logger.recordOutput("AutoShot/detectedCutoff", closestCutoff.name());
       return closestCutoff.speedMps;
     }
 

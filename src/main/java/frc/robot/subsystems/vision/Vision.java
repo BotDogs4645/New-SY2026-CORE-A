@@ -7,6 +7,8 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
@@ -22,6 +24,10 @@ public class Vision extends SubsystemBase {
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
+
+  private Translation2d llToQuestTranslation = new Translation2d(0, 0);
+  private Rotation2d llToQuestRotation = new Rotation2d(0);
+  private Pose2d lastQuestNavPose = new Pose2d(new Translation2d(0, 0), new Rotation2d(0));
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     this.consumer = consumer;
@@ -128,9 +134,29 @@ public class Vision extends SubsystemBase {
           angularStdDev *= cameraStdDevFactors[cameraIndex];
         }
 
+        // if (observation.type() == PoseObservationType.QUESTNAV) {
+        //   lastQuestNavPose = observation.pose().toPose2d();
+        // }
+        // if (observation.type() == PoseObservationType.MEGATAG_1) {
+        //   llToQuestTranslation =
+        //       observation
+        //           .pose()
+        //           .toPose2d()
+        //           .getTranslation()
+        //           .minus(lastQuestNavPose.getTranslation());
+        //   llToQuestRotation =
+        //       observation.pose().toPose2d().getRotation().minus(lastQuestNavPose.getRotation());
+        // }
+
+        Transform2d llToQuestTransform = new Transform2d(0, 0, new Rotation2d(0));
+
+        // if (observation.type() == PoseObservationType.QUESTNAV) {
+        //   llToQuestTransform = new Transform2d(llToQuestTranslation, llToQuestRotation);
+        // }
+
         // Send vision observation
         consumer.accept(
-            observation.pose().toPose2d(),
+            observation.pose().toPose2d().plus(llToQuestTransform),
             observation.timestamp(),
             VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
       }

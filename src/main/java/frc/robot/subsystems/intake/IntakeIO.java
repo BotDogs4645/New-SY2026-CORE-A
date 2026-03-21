@@ -25,6 +25,8 @@ public interface IntakeIO {
 
   public default void setIntakeControl(ControlRequest control) {}
 
+  public default void setArmEncoderPosition(double positionRad) {}
+
   enum IntakeOutputMode {
     BRAKE,
     COAST,
@@ -40,5 +42,6 @@ public interface IntakeIO {
     // Arm
     public IntakeOutputMode armMode = IntakeOutputMode.BRAKE;
     public ArmMechanismPosition armGoalPosition = ArmMechanismPosition.ARM_UP;
+    public double armOutputPower = 0.0;
   }
 }

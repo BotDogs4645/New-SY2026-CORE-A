@@ -9,7 +9,6 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
@@ -30,10 +29,10 @@ public class VisionConstants {
 
   public static final Transform3d robotToQuestTransform =
       new Transform3d(
-          -0.2794,
-          -0.2667,
+          0.2794,
+          0.2667,
           0.2032, // x, y, z offset from robot center (meters)
-          new Rotation3d(0.0, 0.0, (Math.PI * 5) / 4) // roll, pitch, yaw
+          new Rotation3d(0.0, 0.0, (Math.PI * 1) / 4) // roll, pitch, yaw
           );
 
   // Basic filtering thresholds
@@ -64,7 +63,16 @@ public class VisionConstants {
   public static double angularStdDevMegatag2Factor =
       Double.POSITIVE_INFINITY; // No rotation data available
 
-  private Pose2d lastQuestNavPose = null;
   static final double QUESTNAV_RESET_THRESHOLD_METERS = 1.0;
   static final double QUESTNAV_RESET_THRESHOLD_RAD = Math.toRadians(30);
+
+  // questnav sim
+  public static double questNavSimTranslationNoiseStdDevMetersPerSqrtSec = 0.0025;
+  public static double questNavSimYawNoiseStdDevRadPerSqrtSec = 0.001;
+  public static double questNavSimTranslationDriftXMetersPerSec = 0.0;
+  public static double questNavSimTranslationDriftYMetersPerSec = 0.0;
+  public static double questNavSimYawDriftRadPerSec = 0.0;
+  public static boolean questNavSimEnableAbsoluteCorrection = true;
+  public static double questNavSimTranslationCorrectionAlpha = 0.08;
+  public static double questNavSimYawCorrectionAlpha = 0.08;
 }

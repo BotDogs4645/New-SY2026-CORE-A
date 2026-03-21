@@ -45,6 +45,12 @@
           "data": {
             "name": "StopIntake"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AimAndShootBalls4Sec"
+          }
         }
       ]
     }
