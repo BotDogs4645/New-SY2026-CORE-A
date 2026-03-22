@@ -68,7 +68,7 @@ public class ShooterIOTalonFX implements ShooterIO {
 
   @Override
   public void applyOutputs(ShooterIOOutputs outputs) {
-      Logger.recordOutput("Shooter/OutputMode", outputs.shooterMode.name());
+    Logger.recordOutput("Shooter/OutputMode", outputs.shooterMode.name());
     switch (outputs.shooterMode) {
       case BRAKE:
         Logger.recordOutput("Shooter/GoalSpeedRadPerSec", 0.0);

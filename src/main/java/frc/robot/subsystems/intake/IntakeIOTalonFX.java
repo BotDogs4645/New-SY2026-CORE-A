@@ -127,8 +127,8 @@ public class IntakeIOTalonFX implements IntakeIO {
         armVoltage,
         armPositionRot);
     ParentDevice.optimizeBusUtilizationForAll(rollerMotor, armMotor);
-    Logger.recordOutput("Kicker/roller/talonFXInitialized", true);
-    Logger.recordOutput("Kicker/arm/talonFXInitialized", true);
+    Logger.recordOutput("Intake/Roller/talonFXInitialized", true);
+    Logger.recordOutput("Intake/Arm/talonFXInitialized", true);
   }
 
   @Override

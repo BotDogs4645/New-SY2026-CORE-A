@@ -36,9 +36,9 @@ public class HoodIOTalonFX implements HoodIO {
   private final MotionMagicDutyCycle motionMagicPositionCycle = new MotionMagicDutyCycle(0);
   private final NeutralOut brakeControl = new NeutralOut();
 
-  //in rotations
+  // in rotations
   private double startingOffset = 0;
-  
+
   private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   public HoodIOTalonFX() {
@@ -98,7 +98,10 @@ public class HoodIOTalonFX implements HoodIO {
   public void applyOutputs(HoodIOOutputs outputs) {
     Logger.recordOutput("Hood/OutputMode", outputs.mode.name());
     Logger.recordOutput("Hood/TargetPositionRad", outputs.targetPosition);
-    Logger.recordOutput("Hood/TargetPositionWithOffsetRad", Units.rotationsToRadians(Units.radiansToRotations(outputs.targetPosition) + startingOffset));
+    Logger.recordOutput(
+        "Hood/TargetPositionWithOffsetRad",
+        Units.rotationsToRadians(
+            Units.radiansToRotations(outputs.targetPosition) + startingOffset));
     if (outputs.mode == HoodOutputMode.BRAKE) {
       hoodMotor.setControl(brakeControl);
     } else {

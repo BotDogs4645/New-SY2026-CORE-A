@@ -18,6 +18,6 @@ public final class Alerts {
       turretCannotReachAlert.set(false);
       outOfBoundsAlert.set(false);
       shooterRangeAlert.set(false);
+    }
   }
-}
 }

@@ -63,7 +63,8 @@ public final class Rumble {
    * @param seconds duration in seconds
    * @return command that rumbles for the specified duration
    */
-  public static Command rumblePulse(CommandGenericHID controller, double intensity, double seconds) {
+  public static Command rumblePulse(
+      CommandGenericHID controller, double intensity, double seconds) {
     return rumble(controller, intensity).withTimeout(seconds);
   }
 
@@ -75,7 +76,8 @@ public final class Rumble {
    * @param seconds duration in seconds
    * @return command that rumbles for the specified duration
    */
-  public static Command rumblePulseLeft(CommandGenericHID controller, double intensity, double seconds) {
+  public static Command rumblePulseLeft(
+      CommandGenericHID controller, double intensity, double seconds) {
     return rumbleLeft(controller, intensity).withTimeout(seconds);
   }
 
@@ -87,7 +89,8 @@ public final class Rumble {
    * @param seconds duration in seconds
    * @return command that rumbles for the specified duration
    */
-  public static Command rumblePulseRight(CommandGenericHID controller, double intensity, double seconds) {
+  public static Command rumblePulseRight(
+      CommandGenericHID controller, double intensity, double seconds) {
     return rumbleRight(controller, intensity).withTimeout(seconds);
   }
 
@@ -102,7 +105,11 @@ public final class Rumble {
    * @return command that rumbles in a pattern
    */
   public static Command rumblePattern(
-      CommandGenericHID controller, double intensity, double onSeconds, double offSeconds, int repeats) {
+      CommandGenericHID controller,
+      double intensity,
+      double onSeconds,
+      double offSeconds,
+      int repeats) {
     return rumble(controller, intensity)
         .withTimeout(onSeconds)
         .andThen(Commands.waitSeconds(offSeconds))

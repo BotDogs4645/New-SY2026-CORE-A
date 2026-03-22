@@ -49,7 +49,7 @@ public class Shooter extends FullSubsystem {
     if (shooterGoalSpeedRadPerSec == 0.0) {
       outputs.shooterMode = ShooterOutputMode.BRAKE;
       outputs.shooterGoalSpeedRadPerSec = 0.0;
-      atGoalSpeed = false;
+      atGoalSpeed = Math.abs(shooterGoalSpeedRadPerSec - inputs.shooterVelocityRadPerSec) < 12;
     } else {
       outputs.shooterMode = ShooterOutputMode.CLOSED_LOOP;
       outputs.shooterGoalSpeedRadPerSec = shooterGoalSpeedRadPerSec;

@@ -18,9 +18,12 @@ public final class IntakeConstants {
   public static final double armPeakForwardVoltage = 3.0;
   public static final double armPeakReverseVoltage = -3.0;
 
+  public static final double forceExtendArmStallCurrent = 1.72;
+
   // for active duty cycle out, these values are the proportion of the supply voltage to apply
   public static final double intakingRollerOutput = 0.42;
   public static final double armDownRollerOutput = 0.35;
+  public static final double forceExtendArmOutput = 0.054;
 
   public static final double kRollerInRadPerSec = 30;
   public static final double kArmUpRad = 0;

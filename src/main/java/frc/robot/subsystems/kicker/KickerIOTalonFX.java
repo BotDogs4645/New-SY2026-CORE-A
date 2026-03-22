@@ -21,7 +21,8 @@ import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.Logger;
 
 public class KickerIOTalonFX implements KickerIO {
-  private final TalonFX kickerMotor = new TalonFX(KickerConstants.motorCanId, KickerConstants.motorCanBus);
+  private final TalonFX kickerMotor =
+      new TalonFX(KickerConstants.motorCanId, KickerConstants.motorCanBus);
   private final StatusSignal<Current> kickerSupplyCurrent = kickerMotor.getSupplyCurrent();
   private final StatusSignal<AngularVelocity> kickerVelocityRotPerSec = kickerMotor.getVelocity();
   private final StatusSignal<Voltage> kickerVoltage = kickerMotor.getMotorVoltage();
@@ -33,9 +34,10 @@ public class KickerIOTalonFX implements KickerIO {
 
   public KickerIOTalonFX() {
     var kickerConfig = new TalonFXConfiguration();
-    kickerConfig.MotorOutput.Inverted = KickerConstants.motorInverted
-        ? InvertedValue.Clockwise_Positive
-        : InvertedValue.CounterClockwise_Positive;
+    kickerConfig.MotorOutput.Inverted =
+        KickerConstants.motorInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
     kickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kickerConfig.Slot0.kV = KickerConstants.kV;
     kickerConfig.Slot0.kP = KickerConstants.kP;
@@ -49,11 +51,13 @@ public class KickerIOTalonFX implements KickerIO {
 
   @Override
   public void updateInputs(KickerIOInputs inputs) {
-    var status = BaseStatusSignal.refreshAll(kickerSupplyCurrent, kickerVelocityRotPerSec, kickerVoltage);
+    var status =
+        BaseStatusSignal.refreshAll(kickerSupplyCurrent, kickerVelocityRotPerSec, kickerVoltage);
 
     inputs.connected = connectedDebounce.calculate(status.isOK());
     inputs.kickerSupplyCurrent = kickerSupplyCurrent.getValueAsDouble();
-    inputs.kickerVelocityRadPerSec = Units.rotationsToRadians(kickerVelocityRotPerSec.getValueAsDouble());
+    inputs.kickerVelocityRadPerSec =
+        Units.rotationsToRadians(kickerVelocityRotPerSec.getValueAsDouble());
     inputs.kickerAppliedVoltage = kickerVoltage.getValueAsDouble();
   }
 

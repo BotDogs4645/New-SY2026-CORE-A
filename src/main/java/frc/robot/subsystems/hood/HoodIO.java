@@ -19,7 +19,7 @@ public interface HoodIO {
   enum HoodOutputMode {
     BRAKE,
     COAST,
-    CLOSED_LOOP
+    POSITION
   }
 
   class HoodIOOutputs {

@@ -2,8 +2,6 @@ package frc.robot.subsystems.leds;
 
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
-import java.util.function.BooleanSupplier;
-
 import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.ColorFlowAnimation;
 import com.ctre.phoenix6.controls.RainbowAnimation;
@@ -14,6 +12,7 @@ import com.ctre.phoenix6.signals.StripTypeValue;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Leds extends SubsystemBase {
@@ -26,7 +25,7 @@ public class Leds extends SubsystemBase {
       new ColorFlowAnimation(0, 300).withColor(new RGBWColor(0, 0, 255)).withFrameRate(400);
   private ColorFlowAnimation redColorFlow =
       new ColorFlowAnimation(0, 300).withColor(new RGBWColor(255, 0, 0)).withFrameRate(400);
-      private ColorFlowAnimation greenColorFlow =
+  private ColorFlowAnimation greenColorFlow =
       new ColorFlowAnimation(0, 300).withColor(new RGBWColor(0, 255, 0)).withFrameRate(400);
   private ColorFlowAnimation whiteColorFlow =
       new ColorFlowAnimation(0, 300).withColor(new RGBWColor(255, 255, 255)).withFrameRate(400);

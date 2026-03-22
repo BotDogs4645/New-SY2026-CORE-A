@@ -53,7 +53,7 @@ public class Hood extends FullSubsystem {
 
   public void setTargetPosition(double position) {
     targetPosition = position;
-    outputMode = HoodOutputMode.CLOSED_LOOP;
+    outputMode = HoodOutputMode.POSITION;
   }
 
   public void setOutputMode(HoodOutputMode mode) {
@@ -65,7 +65,8 @@ public class Hood extends FullSubsystem {
     outputs.mode = outputMode;
     outputs.targetPosition = targetPosition;
     double currentPosition = Units.radiansToRotations(inputs.positionRadWithoutOffset);
-    if (Math.abs(currentPosition - targetPosition) < 0.004) {
+    if (Math.abs(currentPosition - targetPosition) < 0.004
+        && outputMode == HoodOutputMode.POSITION) {
       atGoalPosition = true;
     } else {
       atGoalPosition = false;
@@ -77,7 +78,7 @@ public class Hood extends FullSubsystem {
     return runOnce(
         () -> {
           setTargetPosition(0.08);
-          setOutputMode(HoodOutputMode.CLOSED_LOOP);
+          setOutputMode(HoodOutputMode.POSITION);
         });
   }
 
@@ -85,7 +86,7 @@ public class Hood extends FullSubsystem {
     return runOnce(
         () -> {
           setTargetPosition(0);
-          setOutputMode(HoodOutputMode.CLOSED_LOOP);
+          setOutputMode(HoodOutputMode.POSITION);
         });
   }
 
@@ -99,7 +100,7 @@ public class Hood extends FullSubsystem {
           Pose2d currentPose = currentPoseSupplier.get();
           Logger.recordOutput("Hood/TrackHub/CurrentPose", currentPose);
           Logger.recordOutput("Hood/TrackHub/TargetPose", targetPose);
-          setOutputMode(HoodOutputMode.CLOSED_LOOP);
+          setOutputMode(HoodOutputMode.POSITION);
           setTargetPosition(getOptimalRotation(currentPose, targetPose));
         },
         () -> {

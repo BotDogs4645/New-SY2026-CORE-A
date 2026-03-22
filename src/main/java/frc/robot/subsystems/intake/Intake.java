@@ -74,14 +74,16 @@ public class Intake extends FullSubsystem {
     this.armOutputPower = power;
   }
 
-  @AutoLogOutput
+  @AutoLogOutput(key = "Intake/Arm/IsAtGoalPosition")
   public boolean armAtGoalPosition() {
-    return Math.abs(inputs.armAngleRad - armGoalPosition.motorPositionRad) < 1;
+    return Math.abs(inputs.armAngleRad - armGoalPosition.motorPositionRad) < 1
+        && armOutputMode == IntakeOutputMode.POSITION;
   }
 
-  @AutoLogOutput
+  @AutoLogOutput(key = "Intake/Arm/IsStalling")
   public boolean isStalling() {
-    return inputs.armSupplyCurrent > 1.72;
+    return inputs.armSupplyCurrent > IntakeConstants.forceExtendArmStallCurrent
+        && armOutputMode == IntakeOutputMode.DUTY_CYCLE;
   }
 
   @AutoLogOutput
@@ -100,7 +102,7 @@ public class Intake extends FullSubsystem {
             runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_HALF_DOWN)),
             Commands.waitUntil(this::armAtGoalPosition),
             runOnce(() -> setRollerOutput(IntakeConstants.armDownRollerOutput)),
-            runOnce(() -> setArmDutyCycleOut(0.054)),
+            runOnce(() -> setArmDutyCycleOut(IntakeConstants.forceExtendArmOutput)),
             Commands.waitUntil(this::isStalling),
             runOnce(
                 () -> {
