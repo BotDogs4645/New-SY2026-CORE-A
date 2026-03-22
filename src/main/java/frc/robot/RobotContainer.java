@@ -187,10 +187,7 @@ public class RobotContainer {
 
     // vision instantiation
     limelightIO = new VisionIOLimelight(VisionConstants.limelightName, drive::getRotation);
-    // vision = new Vision(drive::addVisionMeasurement, limelightIO);
     vision = new Vision(drive::addVisionMeasurement, questNavIO, limelightIO);
-
-    // drive.setPose(new Pose2d(3.547, 4.062, Rotation2d.kZero));
 
     // subsystems
     turret = new Turret(new TurretIOTalonFX());
@@ -203,7 +200,7 @@ public class RobotContainer {
 
     // named command registration
     NamedCommands.registerCommand(
-        "ExtendIntake", intake.ExtendIntake().deadlineFor(leds.ColorFlow()));
+        "ExtendIntake", intake.ExtendIntake().deadlineFor(leds.WhiteColorFlow()));
     NamedCommands.registerCommand("RunIntake", intake.RunIntake(() -> false));
     NamedCommands.registerCommand("StartIntake", intake.StartIntake());
     NamedCommands.registerCommand("StopIntake", intake.StopIntake());
@@ -271,7 +268,7 @@ public class RobotContainer {
         .onTrue(Commands.runOnce(() -> drive.resetGyroOffset(), drive).ignoringDisable(true));
     driveController
         .leftTrigger()
-        .whileTrue(intake.RunIntake(driveController.x()).deadlineFor(leds.ColorFlow()));
+        .whileTrue(intake.RunIntake(driveController.x()).deadlineFor(leds.WhiteColorFlow()));
     driveController.leftBumper().whileTrue(intake.RunOuttake(driveController.x()));
 
 
@@ -279,8 +276,8 @@ public class RobotContainer {
     operatorController.b().and(isUnableToShoot).whileTrue(Rumble.rumble(operatorController, 1.0));
 
 
-    operatorController.a().whileTrue(AutoAim(this::getHubTarget).deadlineFor(leds.RedLEDs()));
-    operatorController.b().whileTrue(AutoAim(() -> getPassTarget(drive.getPose())).deadlineFor(leds.BlueLEDs()));
+    operatorController.a().whileTrue(AutoAim(this::getHubTarget).deadlineFor(leds.TrueFalseColorFlow(isUnableToShoot.negate())));
+    operatorController.b().whileTrue(AutoAim(() -> getPassTarget(drive.getPose())).deadlineFor(leds.TrueFalseColorFlow(isUnableToShoot.negate())));
     operatorController.rightTrigger().whileTrue(FeedBallsToShooter());
     operatorController
         .rightBumper()
@@ -290,7 +287,7 @@ public class RobotContainer {
                     () -> {
                       return !intake.hasExtendedIntake();
                     })
-                .deadlineFor(leds.ColorFlow()));
+                .deadlineFor(leds.WhiteColorFlow()));
   }
 
   /**
