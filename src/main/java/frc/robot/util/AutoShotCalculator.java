@@ -52,7 +52,7 @@ public class AutoShotCalculator {
   private static final LoggedTunableNumber ballDiameterMeters =
       new LoggedTunableNumber("AutoShot/ballDiameterMeters", 0.150114);
   private static final LoggedTunableNumber dragCoefficient =
-      new LoggedTunableNumber("AutoShot/dragCoefficient", 0.7);
+      new LoggedTunableNumber("AutoShot/dragCoefficient", 0.73);
   private static final LoggedTunableNumber airDensityKgPerM3 =
       new LoggedTunableNumber("AutoShot/airDensityKgPerM3", 1.225);
 

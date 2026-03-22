@@ -11,15 +11,15 @@ public final class IntakeConstants {
   public static final int armMotorCanID = 19;
   public static final CANBus armMotorCanBus = new CANBus("CANivore");
 
-  public static final double armKP = 5.0;
+  public static final double armKP = 6.0;
   public static final double armKG = 0.1;
-  public static final double armMotionMagicCruiseVelocity = 13.0;
-  public static final double armMotionMagicAcceleration = 5.0;
+  public static final double armMotionMagicCruiseVelocity = 15.0;
+  public static final double armMotionMagicAcceleration = 7.0;
   public static final double armPeakForwardVoltage = 3.0;
   public static final double armPeakReverseVoltage = -3.0;
 
   // for active duty cycle out, these values are the proportion of the supply voltage to apply
-  public static final double intakingRollerOutput = 0.32;
+  public static final double intakingRollerOutput = 0.42;
   public static final double armDownRollerOutput = 0.35;
 
   public static final double kRollerInRadPerSec = 30;

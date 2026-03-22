@@ -189,7 +189,8 @@ public class RobotContainer {
     leds = new Leds();
 
     // named command registration
-    NamedCommands.registerCommand("ExtendIntake", intake.ExtendIntake());
+    NamedCommands.registerCommand(
+        "ExtendIntake", intake.ExtendIntake().deadlineFor(leds.ColorFlow()));
     NamedCommands.registerCommand("RunIntake", intake.RunIntake(() -> false));
     NamedCommands.registerCommand("StartIntake", intake.StartIntake());
     NamedCommands.registerCommand("StopIntake", intake.StopIntake());
@@ -260,7 +261,9 @@ public class RobotContainer {
     // operatorPanel.button(6).whileTrue(OldShootBalls());
     // operatorPanel.button(10).whileTrue(intake.RunIntake());
     // driveController.leftBumper().onTrue(intake.ExtendIntake());
-    driveController.leftTrigger().whileTrue(intake.RunIntake(driveController.x()));
+    driveController
+        .leftTrigger()
+        .whileTrue(intake.RunIntake(driveController.x()).deadlineFor(leds.ColorFlow()));
 
     operatorController
         .rightBumper()
@@ -269,7 +272,8 @@ public class RobotContainer {
                 .onlyIf(
                     () -> {
                       return !intake.hasExtendedIntake();
-                    }));
+                    })
+                .deadlineFor(leds.ColorFlow()));
 
     operatorController.rightTrigger().whileTrue(FeedBallsToShooter());
 
@@ -282,8 +286,8 @@ public class RobotContainer {
     // questNavIO.resetToZero();
     // }));
 
-    operatorController.a().whileTrue(AutoAim().alongWith(leds.RedLEDs()));
-    driveController.button(1).whileTrue(AutoAimToPass());
+    operatorController.a().whileTrue(AutoAim().deadlineFor(leds.RedLEDs()));
+    operatorController.b().whileTrue(AutoAimToPass().deadlineFor(leds.BlueLEDs()));
 
     // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose,
     // drive.));
