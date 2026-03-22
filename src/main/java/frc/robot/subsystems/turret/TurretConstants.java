@@ -16,7 +16,7 @@ public final class TurretConstants {
   public static final double motionMagicAcceleration = 15;
   public static final double motionMagicJerk = 0.0;
 
-  // in full turret radians:
+  // in real turret radians:
   public static final double encoderStartingPosition = -Math.PI;
   public static final double physicalStartingPosition = 0;
   public static final double hardReverseLimit = -(Math.PI * 3.0) / 2.0;

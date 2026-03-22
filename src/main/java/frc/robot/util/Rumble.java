@@ -1,9 +1,9 @@
 package frc.robot.util;
 
-import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 
 /** utility class for creating controller rumble commands */
 public final class Rumble {
@@ -16,7 +16,7 @@ public final class Rumble {
    * @param intensity rumble intensity from 0.0 to 1.0
    * @return command that rumbles until interrupted
    */
-  public static Command rumble(GenericHID controller, double intensity) {
+  public static Command rumble(CommandGenericHID controller, double intensity) {
     return rumble(controller, intensity, RumbleType.kBothRumble);
   }
 
@@ -28,7 +28,7 @@ public final class Rumble {
    * @param type which rumble motor(s) to use
    * @return command that rumbles until interrupted
    */
-  public static Command rumble(GenericHID controller, double intensity, RumbleType type) {
+  public static Command rumble(CommandGenericHID controller, double intensity, RumbleType type) {
     return Commands.startEnd(
         () -> controller.setRumble(type, intensity), () -> controller.setRumble(type, 0.0));
   }
@@ -40,7 +40,7 @@ public final class Rumble {
    * @param intensity rumble intensity from 0.0 to 1.0
    * @return command that rumbles until interrupted
    */
-  public static Command rumbleLeft(GenericHID controller, double intensity) {
+  public static Command rumbleLeft(CommandGenericHID controller, double intensity) {
     return rumble(controller, intensity, RumbleType.kLeftRumble);
   }
 
@@ -51,7 +51,7 @@ public final class Rumble {
    * @param intensity rumble intensity from 0.0 to 1.0
    * @return command that rumbles until interrupted
    */
-  public static Command rumbleRight(GenericHID controller, double intensity) {
+  public static Command rumbleRight(CommandGenericHID controller, double intensity) {
     return rumble(controller, intensity, RumbleType.kRightRumble);
   }
 
@@ -63,7 +63,7 @@ public final class Rumble {
    * @param seconds duration in seconds
    * @return command that rumbles for the specified duration
    */
-  public static Command rumblePulse(GenericHID controller, double intensity, double seconds) {
+  public static Command rumblePulse(CommandGenericHID controller, double intensity, double seconds) {
     return rumble(controller, intensity).withTimeout(seconds);
   }
 
@@ -75,7 +75,7 @@ public final class Rumble {
    * @param seconds duration in seconds
    * @return command that rumbles for the specified duration
    */
-  public static Command rumblePulseLeft(GenericHID controller, double intensity, double seconds) {
+  public static Command rumblePulseLeft(CommandGenericHID controller, double intensity, double seconds) {
     return rumbleLeft(controller, intensity).withTimeout(seconds);
   }
 
@@ -87,7 +87,7 @@ public final class Rumble {
    * @param seconds duration in seconds
    * @return command that rumbles for the specified duration
    */
-  public static Command rumblePulseRight(GenericHID controller, double intensity, double seconds) {
+  public static Command rumblePulseRight(CommandGenericHID controller, double intensity, double seconds) {
     return rumbleRight(controller, intensity).withTimeout(seconds);
   }
 
@@ -102,7 +102,7 @@ public final class Rumble {
    * @return command that rumbles in a pattern
    */
   public static Command rumblePattern(
-      GenericHID controller, double intensity, double onSeconds, double offSeconds, int repeats) {
+      CommandGenericHID controller, double intensity, double onSeconds, double offSeconds, int repeats) {
     return rumble(controller, intensity)
         .withTimeout(onSeconds)
         .andThen(Commands.waitSeconds(offSeconds))
@@ -120,7 +120,7 @@ public final class Rumble {
    * @return command that alternates rumble between sides
    */
   public static Command rumbleAlternating(
-      GenericHID controller, double intensity, double pulseSeconds, int repeats) {
+      CommandGenericHID controller, double intensity, double pulseSeconds, int repeats) {
     return rumbleLeft(controller, intensity)
         .withTimeout(pulseSeconds)
         .andThen(rumbleRight(controller, intensity).withTimeout(pulseSeconds))

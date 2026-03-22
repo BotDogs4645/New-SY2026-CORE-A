@@ -75,7 +75,7 @@ public class Intake extends FullSubsystem {
   }
 
   @AutoLogOutput
-  public boolean armAtGoal() {
+  public boolean armAtGoalPosition() {
     return Math.abs(inputs.armAngleRad - armGoalPosition.motorPositionRad) < 1;
   }
 
@@ -98,7 +98,7 @@ public class Intake extends FullSubsystem {
 
     return Commands.sequence(
             runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_HALF_DOWN)),
-            Commands.waitUntil(this::armAtGoal),
+            Commands.waitUntil(this::armAtGoalPosition),
             runOnce(() -> setRollerOutput(IntakeConstants.armDownRollerOutput)),
             runOnce(() -> setArmDutyCycleOut(0.054)),
             Commands.waitUntil(this::isStalling),

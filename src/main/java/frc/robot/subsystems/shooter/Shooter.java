@@ -40,7 +40,7 @@ public class Shooter extends FullSubsystem {
   }
 
   @AutoLogOutput
-  public boolean atGoalSpeed() {
+  public boolean isAtGoalSpeed() {
     return atGoalSpeed;
   }
 
@@ -64,7 +64,7 @@ public class Shooter extends FullSubsystem {
         }
       } else {
         // we are recovering or spinning up
-        if (Math.abs(error) < 10) {
+        if (Math.abs(error) < 12) {
           atGoalSpeed = true;
         }
       }

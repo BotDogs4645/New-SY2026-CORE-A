@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
@@ -54,6 +55,7 @@ import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.Alerts;
 import frc.robot.util.AutoShotCalculator;
 import frc.robot.util.LoggedTunableNumber;
+import frc.robot.util.Rumble;
 
 import java.util.function.Supplier;
 
@@ -93,6 +95,7 @@ public class RobotContainer {
 
   private final AutoShotCalculator shotCalculator;
   private AutoShotCalculator.ShotSolution latestSolution = AutoShotCalculator.ShotSolution.none();
+  private final Trigger isUnableToShoot = new Trigger(() -> !latestSolution.isSolutionFound());
   private static final LoggedTunableNumber hoodOffset = new LoggedTunableNumber("AutoShot/hoodOffset", 0.122);
 
   // private final Trigger isUnableToShoot = new
@@ -272,6 +275,10 @@ public class RobotContainer {
     driveController.leftBumper().whileTrue(intake.RunOuttake(driveController.x()));
 
 
+    operatorController.a().and(isUnableToShoot).whileTrue(Rumble.rumble(operatorController, 1.0));
+    operatorController.b().and(isUnableToShoot).whileTrue(Rumble.rumble(operatorController, 1.0));
+
+
     operatorController.a().whileTrue(AutoAim(this::getHubTarget).deadlineFor(leds.RedLEDs()));
     operatorController.b().whileTrue(AutoAim(() -> getPassTarget(drive.getPose())).deadlineFor(leds.BlueLEDs()));
     operatorController.rightTrigger().whileTrue(FeedBallsToShooter());
@@ -308,7 +315,7 @@ public class RobotContainer {
   public Command FeedBallsToShooter() {
     return Commands.parallel(
         kicker.RunKicker(),
-        Commands.sequence(Commands.waitUntil(kicker::atGoalSpeed), spindexer.RunSpindexer()));
+        Commands.sequence(Commands.waitUntil(kicker::isAtGoalSpeed), spindexer.RunSpindexer()));
   }
 
   public Command AutoAim(Supplier<Translation3d> target) {
@@ -327,7 +334,7 @@ public class RobotContainer {
     return Commands.parallel(
         shooter.RunShooter(),
         Commands.sequence(
-            Commands.waitUntil(shooter::atGoalSpeed),
+            Commands.waitUntil(shooter::isAtGoalSpeed),
             Commands.parallel(kicker.RunKicker(), spindexer.RunSpindexer())));
   }
 
@@ -340,8 +347,7 @@ public class RobotContainer {
         drive.getPose(), drive.getChassisSpeeds(), target, hood.getCurrentHoodRotation());
 
     if (latestSolution.isSolutionFound()) {
-      Alerts.AutoShot.outOfBoundsAlert.set(false);
-      Alerts.AutoShot.turretCannotReachAlert.set(false);
+      Alerts.AutoShot.resetAutoShotAlerts();
       turret.setGoalPositionRad(latestSolution.turretAngleRad());
       double hoodGoalPosition = (Math.PI / 2) - latestSolution.hoodAngleRad() - hoodOffset.getAsDouble();
       hood.setGoalPosition(hoodGoalPosition);
@@ -352,13 +358,14 @@ public class RobotContainer {
           Alerts.AutoShot.turretCannotReachAlert.set(true);
         case LOCATION:
           Alerts.AutoShot.outOfBoundsAlert.set(true);
+        case SHOOTER_RANGE:
+          Alerts.AutoShot.shooterRangeAlert.set(true);
       }
     }
   }
 
   public void stopAutoAim() {
-    Alerts.AutoShot.outOfBoundsAlert.set(false);
-    Alerts.AutoShot.turretCannotReachAlert.set(false);
+    Alerts.AutoShot.resetAutoShotAlerts();
     shooter.setShooterGoalSpeedRadPerSec(0);
   }
 

@@ -46,6 +46,11 @@ public class Hood extends FullSubsystem {
     hoodDisconnectedAlert.set(!inputs.connected);
   }
 
+  @AutoLogOutput
+  public boolean isAtGoalPosition() {
+    return atGoalPosition;
+  }
+
   public void setTargetPosition(double position) {
     targetPosition = position;
     outputMode = HoodOutputMode.CLOSED_LOOP;
@@ -65,7 +70,6 @@ public class Hood extends FullSubsystem {
     } else {
       atGoalPosition = false;
     }
-    Logger.recordOutput("Hood/isAtTarget", atGoalPosition);
     io.applyOutputs(outputs);
   }
 

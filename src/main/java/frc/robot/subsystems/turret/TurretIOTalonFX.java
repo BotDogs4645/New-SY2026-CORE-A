@@ -73,8 +73,8 @@ public class TurretIOTalonFX implements TurretIO {
   public void updateInputs(TurretIOInputs inputs) {
     var status = BaseStatusSignal.refreshAll(supplyCurrent, positionRot, velocityRotPerSec);
 
-    inputs.positionRad = Units.rotationsToRadians(positionRot.getValueAsDouble());
-    inputs.positionRadWithGearRatio = Units.rotationsToRadians(positionRot.getValueAsDouble()) * TurretConstants.gearRatio;
+    inputs.rawPositionRad = Units.rotationsToRadians(positionRot.getValueAsDouble());
+    inputs.realPositionRad = Units.rotationsToRadians(positionRot.getValueAsDouble()) / TurretConstants.gearRatio;
     inputs.velocityRadPerSec = Units.rotationsToRadians(velocityRotPerSec.getValueAsDouble());
     inputs.supplyCurrent = supplyCurrent.getValueAsDouble();
     inputs.controlMode = activeControl.getValue().toString();
@@ -84,8 +84,8 @@ public class TurretIOTalonFX implements TurretIO {
   @Override
   public void applyOutputs(TurretIOOutputs outputs) {
     Logger.recordOutput("Turret/OutputMode", outputs.mode.name());
-    Logger.recordOutput("Turret/GoalPositionRad", outputs.goalPositionRad);
-    Logger.recordOutput("Turret/GoalPositionRadWithoutGearRatio", Units.rotationsToRadians(convertToTurretPosition(outputs.goalPositionRad)));
+    Logger.recordOutput("Turret/RealGoalPositionRad", outputs.goalPositionRad);
+    Logger.recordOutput("Turret/RawGoalPositionRad", Units.rotationsToRadians(convertToTurretPosition(outputs.goalPositionRad)));
     switch (outputs.mode) {
       case BRAKE:
         turretMotor.setControl(brakeRequest);

@@ -37,7 +37,7 @@ public class Kicker extends FullSubsystem {
   }
 
   @AutoLogOutput
-  public boolean atGoalSpeed() {
+  public boolean isAtGoalSpeed() {
     return atGoalSpeed;
   }
 
@@ -51,7 +51,7 @@ public class Kicker extends FullSubsystem {
       outputs.kickerMode = KickerOutputMode.CLOSED_LOOP;
       outputs.kickerGoalSpeedRadPerSec = kickerGoalSpeedRadPerSec;
     }
-    atGoalSpeed = Math.abs(inputs.kickerVelocityRadPerSec - kickerGoalSpeedRadPerSec) < 5;
+    atGoalSpeed = Math.abs(inputs.kickerVelocityRadPerSec - kickerGoalSpeedRadPerSec) < 10;
 
     io.applyOutputs(outputs);
   }
