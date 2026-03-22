@@ -36,7 +36,9 @@ public class HoodIOTalonFX implements HoodIO {
   private final MotionMagicDutyCycle motionMagicPositionCycle = new MotionMagicDutyCycle(0);
   private final NeutralOut brakeControl = new NeutralOut();
 
+  //in rotations
   private double startingOffset = 0;
+  
   private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   public HoodIOTalonFX() {
@@ -52,8 +54,8 @@ public class HoodIOTalonFX implements HoodIO {
 
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = HoodConstants.motionMagicCruiseVelocity;
     motorConfig.MotionMagic.MotionMagicAcceleration = HoodConstants.motionMagicAcceleration;
-    motorConfig.Slot0.kP = 6.5;
-    motorConfig.Slot0.kI = 1.6;
+    motorConfig.Slot0.kP = HoodConstants.kP;
+    motorConfig.Slot0.kI = HoodConstants.kI;
     motorConfig.Feedback.FeedbackRemoteSensorID = HoodConstants.thorughboreEncoderId;
     motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -94,6 +96,9 @@ public class HoodIOTalonFX implements HoodIO {
 
   @Override
   public void applyOutputs(HoodIOOutputs outputs) {
+    Logger.recordOutput("Hood/OutputMode", outputs.mode.name());
+    Logger.recordOutput("Hood/TargetPositionRad", outputs.targetPosition);
+    Logger.recordOutput("Hood/TargetPositionWithOffsetRad", Units.rotationsToRadians(Units.radiansToRotations(outputs.targetPosition) + startingOffset));
     if (outputs.mode == HoodOutputMode.BRAKE) {
       hoodMotor.setControl(brakeControl);
     } else {

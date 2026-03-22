@@ -50,47 +50,43 @@ public class IntakeIOTalonFX implements IntakeIO {
 
   @Override
   public void applyOutputs(IntakeIOOutputs outputs) {
+    Logger.recordOutput("Intake/Roller/OutputMode", outputs.rollerMode.name());
+    Logger.recordOutput("Intake/Roller/OutputLevel", outputs.rollerOutputLevel);
     switch (outputs.rollerMode) {
       case COAST -> {
         // make sure motor is in coast if you want it truly coasting
-        Logger.recordOutput("Intake/RollerOutputMode", "COAST");
         rollerMotor.setControl(coastOut);
+        break;
       }
       case BRAKE -> {
-        Logger.recordOutput("Intake/RollerOutputMode", "BRAKE");
         rollerMotor.setControl(neutralOut);
+        break;
       }
       case DUTY_CYCLE -> {
-        Logger.recordOutput("Intake/RollerOutputMode", "DUTYCYCLE");
         rollerMotor.setControl(dutyCycleRequest.withOutput(outputs.rollerOutputLevel));
+        break;
       }
     }
+    Logger.recordOutput("Intake/Arm/OutputMode", outputs.armMode.name());
+    Logger.recordOutput("Intake/Arm/OutputLevel", outputs.armOutputPower);
+    Logger.recordOutput("Intake/Arm/TargetPositionRad", outputs.armGoalPosition.motorPositionRad);
     switch (outputs.armMode) {
       case POSITION -> {
         double rotations = Units.radiansToRotations(outputs.armGoalPosition.motorPositionRad);
-        Logger.recordOutput("Intake/ArmOutputMode", "POSITION");
-        Logger.recordOutput(
-            "Intake/ArmTargetPositionRad", outputs.armGoalPosition.motorPositionRad);
         armMotor.setControl(armRequest.withPosition(rotations));
         break;
       }
       case COAST -> {
-        Logger.recordOutput("Intake/ArmOutputMode", "COAST");
         armMotor.setControl(coastOut);
         break;
       }
       case BRAKE -> {
-        Logger.recordOutput("Intake/ArmOutputMode", "BRAKE");
         armMotor.setControl(neutralOut);
         break;
       }
       case DUTY_CYCLE -> {
-        Logger.recordOutput("Intake/ArmOutputMode", "DUTYCYCLE");
         armMotor.setControl(armDutyCycleOut.withOutput(outputs.armOutputPower));
         break;
-      }
-      case CLOSED_LOOP -> {
-        armMotor.setControl(neutralOut);
       }
     }
   }

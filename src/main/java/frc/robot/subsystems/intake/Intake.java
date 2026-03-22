@@ -47,15 +47,12 @@ public class Intake extends FullSubsystem {
 
   @Override
   public void periodicAfterScheduler() {
-    Logger.recordOutput("Intake/rollerOutput", rollerOutputLevel);
     if (rollerOutputLevel == 0.0) {
       outputs.rollerMode = IntakeOutputMode.COAST;
       outputs.rollerOutputLevel = 0.0;
-      Logger.recordOutput("Intake/outputMode", "COAST");
     } else {
       outputs.rollerMode = IntakeOutputMode.DUTY_CYCLE;
       outputs.rollerOutputLevel = rollerOutputLevel;
-      Logger.recordOutput("Intake/outputMode", "DUTYCYCLE");
     }
     outputs.armMode = armOutputMode;
     outputs.armGoalPosition = armGoalPosition;

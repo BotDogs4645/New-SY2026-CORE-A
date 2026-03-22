@@ -74,6 +74,7 @@ public class TurretIOTalonFX implements TurretIO {
     var status = BaseStatusSignal.refreshAll(supplyCurrent, positionRot, velocityRotPerSec);
 
     inputs.positionRad = Units.rotationsToRadians(positionRot.getValueAsDouble());
+    inputs.positionRadWithGearRatio = Units.rotationsToRadians(positionRot.getValueAsDouble()) * TurretConstants.gearRatio;
     inputs.velocityRadPerSec = Units.rotationsToRadians(velocityRotPerSec.getValueAsDouble());
     inputs.supplyCurrent = supplyCurrent.getValueAsDouble();
     inputs.controlMode = activeControl.getValue().toString();
@@ -82,6 +83,9 @@ public class TurretIOTalonFX implements TurretIO {
 
   @Override
   public void applyOutputs(TurretIOOutputs outputs) {
+    Logger.recordOutput("Turret/OutputMode", outputs.mode.name());
+    Logger.recordOutput("Turret/GoalPositionRad", outputs.goalPositionRad);
+    Logger.recordOutput("Turret/GoalPositionRadWithoutGearRatio", Units.rotationsToRadians(convertToTurretPosition(outputs.goalPositionRad)));
     switch (outputs.mode) {
       case BRAKE:
         turretMotor.setControl(brakeRequest);
@@ -93,7 +97,6 @@ public class TurretIOTalonFX implements TurretIO {
 
       case POSITION:
         double positionRot = convertToTurretPosition(outputs.goalPositionRad);
-        Logger.recordOutput("Turret/IO/goalPositionRot", positionRot);
         turretMotor.setControl(positionRequest.withPosition(positionRot));
         break;
     }

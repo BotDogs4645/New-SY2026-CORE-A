@@ -46,7 +46,6 @@ public class Shooter extends FullSubsystem {
 
   @Override
   public void periodicAfterScheduler() {
-    Logger.recordOutput("Shooter/shooterGoalSpeedRadPerSec", shooterGoalSpeedRadPerSec);
     if (shooterGoalSpeedRadPerSec == 0.0) {
       outputs.shooterMode = ShooterOutputMode.BRAKE;
       outputs.shooterGoalSpeedRadPerSec = 0.0;

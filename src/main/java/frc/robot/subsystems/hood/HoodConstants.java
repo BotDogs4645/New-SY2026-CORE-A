@@ -9,6 +9,9 @@ public final class HoodConstants {
   public static final CANBus motorCanBus = new CANBus("CANivore");
   public static final CANBus encoderCanBus = new CANBus("CANivore");
 
+  public static final double kP = 6.5;
+  public static final double kI = 1.6;
+
   public static final double motionMagicCruiseVelocity = 14;
   public static final double motionMagicAcceleration = 9;
   public static final double motionMagicJerk = 0.0;

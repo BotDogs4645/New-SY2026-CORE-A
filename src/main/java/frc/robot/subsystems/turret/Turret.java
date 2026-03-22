@@ -54,8 +54,6 @@ public class Turret extends FullSubsystem {
 
   @Override
   public void periodicAfterScheduler() {
-    Logger.recordOutput("Turret/goalPositionRad", goalPositionRad);
-    Logger.recordOutput("Turret/ouputMode", outputMode);
     outputs.mode = outputMode;
     outputs.goalPositionRad = goalPositionRad;
     io.applyOutputs(outputs);
@@ -70,11 +68,6 @@ public class Turret extends FullSubsystem {
     outputMode = TurretOutputMode.BRAKE;
   }
 
-  public Command followHub(
-      Supplier<Pose2d> currentPoseSupplier, Supplier<ChassisSpeeds> chassisSpeeds) {
-    return followTargetPosition(
-        currentPoseSupplier, FieldConstants.Hub.centerPose2d, chassisSpeeds);
-  }
 
   public boolean isNoPositionAvailableDuringTracking() {
     return noPositionAvailable && outputMode == TurretOutputMode.POSITION;
@@ -84,35 +77,15 @@ public class Turret extends FullSubsystem {
     return new Trigger(this::isNoPositionAvailableDuringTracking);
   }
 
-  public Command followTargetPosition(
-      Supplier<Pose2d> currentPoseSupplier,
-      Pose2d targetPose,
-      Supplier<ChassisSpeeds> chassisSpeeds) {
-    return runEnd(
-        () -> {
-          OptionalDouble optimalRotation =
-              getOptimalRotation(
-                  currentPoseSupplier.get(), targetPose, inputs.positionRad, chassisSpeeds.get());
-          if (optimalRotation.isEmpty()) {
-            noPositionAvailable = true;
-          } else {
-            setGoalPositionRad(optimalRotation.getAsDouble());
-          }
-        },
-        () -> {
-          setMotorBrake();
-          ;
-        });
-  }
 
   public OptionalDouble findBestTurretAngleRad(double angleRad) {
     double[] candidateRotations = getEquivalentRadians(Rotation2d.fromRadians(angleRad));
-    Logger.recordOutput("Turret/candidates", candidateRotations);
+    Logger.recordOutput("Turret/AngleFinder/candidates", candidateRotations);
     double[] reachableRotations =
         Arrays.stream(candidateRotations).filter(x -> isReachablePosition(x)).toArray();
-    Logger.recordOutput("Turret/reachablePositions", reachableRotations);
+    Logger.recordOutput("Turret/AngleFinder/reachablePositions", reachableRotations);
     if (reachableRotations.length == 0) {
-      Logger.recordOutput("Turret/returningEmpty", true);
+      Logger.recordOutput("Turret/AngleFinder/returningEmpty", true);
       return OptionalDouble.empty();
     }
     if (reachableRotations.length == 1) {
@@ -120,7 +93,7 @@ public class Turret extends FullSubsystem {
     }
 
     double closestRotation = reachableRotations[0];
-    Logger.recordOutput("Turret/startingClosest", closestRotation);
+    Logger.recordOutput("Turret/AngleFinder/startingClosest", closestRotation);
     double shortestDistance = Math.abs(inputs.positionRad - reachableRotations[0]);
     for (double r : reachableRotations) {
       double distance = Math.abs(inputs.positionRad - r);
@@ -130,51 +103,6 @@ public class Turret extends FullSubsystem {
       }
     }
     return OptionalDouble.of(closestRotation);
-  }
-
-  // returns the position (in radians) to spin the motor to in order to follow a
-  // target
-  public OptionalDouble getOptimalRotation(
-      Pose2d curPose, Pose2d targetPose, double currentPositionRad, ChassisSpeeds chassisSpeeds) {
-    double[] candidateRotations = getCandidateRotations(curPose, targetPose, chassisSpeeds);
-    double[] reachableRotations =
-        Arrays.stream(candidateRotations).filter(x -> isReachablePosition(x)).toArray();
-
-    if (reachableRotations.length == 0) return OptionalDouble.empty();
-    if (reachableRotations.length == 1) return OptionalDouble.of(reachableRotations[0]);
-
-    double closestRotation = reachableRotations[0];
-    double shortestDistance = currentPositionRad - reachableRotations[0];
-    for (double r : reachableRotations) {
-      double distance = currentPositionRad - r;
-      if (distance < shortestDistance) {
-        closestRotation = r;
-        shortestDistance = distance;
-      }
-    }
-    return OptionalDouble.of(closestRotation);
-  }
-
-  public double[] getCandidateRotations(
-      Pose2d curPose, Pose2d targetPose, ChassisSpeeds chassisSpeeds) {
-    Transform2d transformToTarget = curPose.minus(targetPose);
-    Translation2d translationToTarget = transformToTarget.getTranslation().times(-1);
-
-    Rotation2d fieldRelativeAngleToTarget =
-        new Rotation2d(translationToTarget.getX(), translationToTarget.getY());
-    Rotation2d swerveOrientationAngleToTarget = transformToTarget.getRotation();
-
-    Rotation2d rotationToTarget = fieldRelativeAngleToTarget.minus(swerveOrientationAngleToTarget);
-
-    Logger.recordOutput("Turret/transformToTarget", transformToTarget);
-    Logger.recordOutput(
-        "Turret/swerveOrientationAngleToTarget", swerveOrientationAngleToTarget.getDegrees());
-    Logger.recordOutput(
-        "Turret/fieldRelativeAngleToTarget", fieldRelativeAngleToTarget.getDegrees());
-    Logger.recordOutput("Turret/translationToTarget", translationToTarget);
-    Logger.recordOutput("Turret/rotationToTarget", rotationToTarget.getDegrees());
-
-    return getEquivalentRadians(rotationToTarget);
   }
 
   /**

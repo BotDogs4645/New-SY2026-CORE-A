@@ -194,7 +194,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("RunIntake", intake.RunIntake(() -> false));
     NamedCommands.registerCommand("StartIntake", intake.StartIntake());
     NamedCommands.registerCommand("StopIntake", intake.StopIntake());
-    NamedCommands.registerCommand("AutoAim", AutoAim());
+    NamedCommands.registerCommand("AutoAim", AutoAim(getHubTarget()));
     NamedCommands.registerCommand("FeedBallsToShooter", FeedBallsToShooter());
     NamedCommands.registerCommand("AimAndShootBalls4Sec", AimAndShootBalls(4));
 
@@ -286,8 +286,8 @@ public class RobotContainer {
     // questNavIO.resetToZero();
     // }));
 
-    operatorController.a().whileTrue(AutoAim().deadlineFor(leds.RedLEDs()));
-    operatorController.b().whileTrue(AutoAimToPass().deadlineFor(leds.BlueLEDs()));
+    operatorController.a().whileTrue(AutoAim(getHubTarget()).deadlineFor(leds.RedLEDs()));
+    operatorController.b().whileTrue(AutoAim(getPassTarget(drive.getPose())).deadlineFor(leds.BlueLEDs()));
 
     // driveController.leftTrigger().onTrue(turret.followHub(drive::getPose,
     // drive.));
@@ -305,7 +305,7 @@ public class RobotContainer {
 
   public Command AimAndShootBalls(double timeout) {
     return Commands.parallel(
-            AutoAim(),
+            AutoAim(getHubTarget()),
             Commands.sequence(
                 Commands.waitUntil(() -> latestSolution.isSolutionFound()),
                 Commands.waitSeconds(2),
@@ -319,22 +319,10 @@ public class RobotContainer {
         Commands.sequence(Commands.waitUntil(kicker::atGoalSpeed), spindexer.RunSpindexer()));
   }
 
-  public Command AutoAim() {
+  public Command AutoAim(Translation3d target) {
     return Commands.runEnd(
             () -> {
-              autoAimShooter();
-            },
-            () -> {
-              stopAutoAim();
-            },
-            turret)
-        .withName("AutoAim");
-  }
-
-  public Command AutoAimToPass() {
-    return Commands.runEnd(
-            () -> {
-              autoAimShooterToPass();
+              autoAimShooter(target);
             },
             () -> {
               stopAutoAim();
@@ -351,22 +339,12 @@ public class RobotContainer {
             Commands.parallel(kicker.RunKicker(), spindexer.RunSpindexer())));
   }
 
-  public Command OldShootBalls() {
-    return new SequentialCommandGroup(
-            shooter.StartShooter(),
-            new WaitCommand(0.2),
-            kicker.StartKicker(),
-            spindexer.StartSpindexer())
-        .andThen(Commands.idle())
-        .finallyDo(() -> CommandScheduler.getInstance().schedule(StopShooting()));
-  }
-
   public Command StopShooting() {
     return Commands.parallel(shooter.StopShooter(), kicker.StopKicker(), spindexer.StopSpindexer());
   }
 
-  public void autoAimShooterToPass() {
-    Translation3d target = getPassTarget(drive.getPose());
+
+  public void autoAimShooter(Translation3d target) {
     latestSolution =
         shotCalculator.calculate(
             drive.getPose(), drive.getChassisSpeeds(), target, hood.getCurrentHoodRotation());
@@ -377,34 +355,6 @@ public class RobotContainer {
       turret.setGoalPositionRad(latestSolution.turretAngleRad());
       double hoodGoalPosition =
           (Math.PI / 2) - latestSolution.hoodAngleRad() - hoodOffset.getAsDouble();
-      Logger.recordOutput("Turret/targetPositionRad", latestSolution.turretAngleRad());
-      Logger.recordOutput("Hood/targetPositionRad", hoodGoalPosition);
-      hood.setGoalPosition(hoodGoalPosition);
-      shooter.setShooterGoalSpeedRadPerSec(latestSolution.flywheelVelocityRadPerSec());
-    } else {
-      switch (latestSolution.constrainingFactor()) {
-        case TURRET_RANGE:
-          Alerts.AutoShot.turretCannotReachAlert.set(true);
-        case LOCATION:
-          Alerts.AutoShot.outOfBoundsAlert.set(true);
-      }
-    }
-  }
-
-  public void autoAimShooter() {
-    Translation3d target = getHubTarget();
-    latestSolution =
-        shotCalculator.calculate(
-            drive.getPose(), drive.getChassisSpeeds(), target, hood.getCurrentHoodRotation());
-
-    if (latestSolution.isSolutionFound()) {
-      Alerts.AutoShot.outOfBoundsAlert.set(false);
-      Alerts.AutoShot.turretCannotReachAlert.set(false);
-      turret.setGoalPositionRad(latestSolution.turretAngleRad());
-      double hoodGoalPosition =
-          (Math.PI / 2) - latestSolution.hoodAngleRad() - hoodOffset.getAsDouble();
-      Logger.recordOutput("Turret/targetPositionRad", latestSolution.turretAngleRad());
-      Logger.recordOutput("Hood/targetPositionRad", hoodGoalPosition);
       hood.setGoalPosition(hoodGoalPosition);
       shooter.setShooterGoalSpeedRadPerSec(latestSolution.flywheelVelocityRadPerSec());
     } else {

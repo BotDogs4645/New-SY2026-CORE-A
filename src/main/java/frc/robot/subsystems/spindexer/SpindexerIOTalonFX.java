@@ -70,9 +70,12 @@ public class SpindexerIOTalonFX implements SpindexerIO {
 
   @Override
   public void applyOutputs(SpindexerIOOutputs outputs) {
+    Logger.recordOutput("Spindexer/OutputMode", outputs.mode.name());
     if (outputs.mode == SpindexerOutputMode.BRAKE) {
+      Logger.recordOutput("Spindexer/OutputLevel", 0.0);
       setMotorControl(brakeControl);
     } else {
+      Logger.recordOutput("Spindexer/OutputLevel", outputs.speed);
       setMotorControl(dutyCycleControl.withOutput(outputs.speed));
     }
   }

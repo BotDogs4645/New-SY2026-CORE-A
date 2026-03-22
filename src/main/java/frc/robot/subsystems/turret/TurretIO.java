@@ -7,6 +7,7 @@ public interface TurretIO {
   public static class TurretIOInputs {
     public double supplyCurrent = 0.0;
     public double positionRad = 0.0;
+    public double positionRadWithGearRatio = 0.0;
     public double velocityRadPerSec = 0.0;
     public String controlMode = "";
     public boolean connected;

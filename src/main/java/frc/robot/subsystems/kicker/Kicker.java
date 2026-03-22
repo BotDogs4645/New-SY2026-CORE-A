@@ -43,8 +43,6 @@ public class Kicker extends FullSubsystem {
 
   @Override
   public void periodicAfterScheduler() {
-    Logger.recordOutput("Kicker/kickerGoalSpeedRadPerSec", kickerGoalSpeedRadPerSec);
-
     if (kickerGoalSpeedRadPerSec == 0.0) {
       outputs.kickerMode = KickerOutputMode.BRAKE;
       outputs.kickerGoalSpeedRadPerSec = 0.0;

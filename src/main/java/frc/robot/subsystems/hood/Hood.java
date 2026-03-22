@@ -43,7 +43,6 @@ public class Hood extends FullSubsystem {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
-    Logger.recordOutput("Hood/TargetRads", targetPosition);
     hoodDisconnectedAlert.set(!inputs.connected);
   }
 
