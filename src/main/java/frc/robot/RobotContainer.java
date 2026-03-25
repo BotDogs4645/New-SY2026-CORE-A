@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -218,6 +219,7 @@ public class RobotContainer {
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     SmartDashboard.putData("Field", m_field);
+    SmartDashboard.putData("CommandScheduler", CommandScheduler.getInstance());
 
     // Configure the button bindings
     configureButtonBindings();
@@ -252,9 +254,7 @@ public class RobotContainer {
     driveController
         .b()
         .onTrue(Commands.runOnce(() -> drive.resetGyroOffset(), drive).ignoringDisable(true));
-    driveController
-        .leftTrigger()
-        .whileTrue(intake.RunIntake(driveController.x()).deadlineFor(leds.WhiteColorFlow()));
+    driveController.leftTrigger().whileTrue(intake.RunIntake(driveController.x()));
     driveController.leftBumper().whileTrue(intake.RunOuttake(driveController.x()));
 
     operatorController.a().and(isUnableToShoot).whileTrue(Rumble.rumble(operatorController, 1.0));

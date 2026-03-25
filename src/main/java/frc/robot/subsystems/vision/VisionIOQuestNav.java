@@ -18,7 +18,7 @@ public class VisionIOQuestNav implements VisionIO {
   private final QuestNav questNav;
   private final Transform3d robotToQuest;
   private final Alert lowBatteryAlert =
-      new Alert("QuestNav battery below 50%! Charge it!!!", AlertType.kWarning);
+      new Alert("QuestNav battery below 30%! Charge it!!!", AlertType.kWarning);
   private final String name;
   private Transform3d calibrationTransform = new Transform3d();
 
@@ -34,7 +34,9 @@ public class VisionIOQuestNav implements VisionIO {
     inputs.name = name;
 
     inputs.connected = questNav.isConnected();
-    questNav.getBatteryPercent().ifPresent(battery -> lowBatteryAlert.set(battery < 50.0));
+    questNav
+        .getBatteryPercent()
+        .ifPresent(battery -> lowBatteryAlert.set(battery < 30.0 && questNav.isConnected()));
     if (questNav.getBatteryPercent().isPresent()) {
       inputs.batteryLevel = questNav.getBatteryPercent().getAsInt();
     }

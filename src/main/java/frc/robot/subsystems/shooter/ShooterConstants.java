@@ -8,7 +8,7 @@ public final class ShooterConstants {
   public static final boolean motorInverted = true;
 
   public static final double kP = 0.085;
-  public static final double kV = 0.135;
+  public static final double kV = 0.1325;
 
   public static final double defaultSpeedRadPerSec = 300;
 

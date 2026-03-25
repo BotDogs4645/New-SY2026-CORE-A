@@ -106,7 +106,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     armConfig.Slot0.kP = IntakeConstants.armKP;
     armConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
     armConfig.Slot0.kG = IntakeConstants.armKG;
-    armConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    armConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     armConfig.Voltage.PeakForwardVoltage = IntakeConstants.armPeakForwardVoltage;
     armConfig.Voltage.PeakReverseVoltage = IntakeConstants.armPeakReverseVoltage;

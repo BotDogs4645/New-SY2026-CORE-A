@@ -52,13 +52,13 @@ public class AutoShotCalculator {
   private static final LoggedTunableNumber ballDiameterMeters =
       new LoggedTunableNumber("AutoShot/ballDiameterMeters", 0.150114);
   private static final LoggedTunableNumber dragCoefficient =
-      new LoggedTunableNumber("AutoShot/dragCoefficient", 0.73);
+      new LoggedTunableNumber("AutoShot/dragCoefficient", 0.77);
   private static final LoggedTunableNumber airDensityKgPerM3 =
       new LoggedTunableNumber("AutoShot/airDensityKgPerM3", 1.225);
 
   // flywheel
   private static final LoggedTunableNumber flywheelSpeedDropRadPerSec =
-      new LoggedTunableNumber("AutoShot/flywheelSpeedDropRadPerSec", 43.0);
+      new LoggedTunableNumber("AutoShot/flywheelSpeedDropRadPerSec", 47.5);
   private static final LoggedTunableNumber launchEfficiency =
       new LoggedTunableNumber("AutoShot/launchEfficiency", 0.975);
 

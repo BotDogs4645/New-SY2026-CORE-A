@@ -43,11 +43,11 @@ public class TurretIOTalonFX implements TurretIO {
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         Units.radiansToRotations(TurretConstants.hardForwardLimit * TurretConstants.gearRatio);
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
 
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
         Units.radiansToRotations(TurretConstants.hardReverseLimit * TurretConstants.gearRatio);
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
