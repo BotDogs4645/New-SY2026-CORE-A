@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import frc.robot.subsystems.intake.IntakeConstants.ArmMechanismPosition;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.subsystems.intake.IntakeIO.IntakeOutputMode;
@@ -80,10 +81,16 @@ public class Intake extends FullSubsystem {
         && armOutputMode == IntakeOutputMode.POSITION;
   }
 
-  @AutoLogOutput(key = "Intake/Arm/IsStalling")
-  public boolean isStalling() {
+  @AutoLogOutput(key = "Intake/Arm/IsStalled")
+  public boolean isArmStalled() {
     return inputs.armSupplyCurrent > IntakeConstants.forceExtendArmStallCurrent
         && armOutputMode == IntakeOutputMode.DUTY_CYCLE;
+  }
+  
+  @AutoLogOutput(key = "Intake/Roller/IsStalled")
+  public boolean isRollersStalled() {
+    return inputs.rollerSupplyCurrent > IntakeConstants.rollerStallCurrent
+        && rollerOutputLevel != 0.0 && Math.abs(inputs.rollerVelocityRadPerSec) < IntakeConstants.rollerStallVelocityThreshold;
   }
 
   @AutoLogOutput
@@ -103,7 +110,7 @@ public class Intake extends FullSubsystem {
             Commands.waitUntil(this::armAtGoalPosition),
             runOnce(() -> setRollerOutput(IntakeConstants.armDownRollerOutput)),
             runOnce(() -> setArmDutyCycleOut(IntakeConstants.forceExtendArmOutput)),
-            Commands.waitUntil(this::isStalling),
+            Commands.waitUntil(this::isArmStalled),
             runOnce(
                 () -> {
                   io.setArmEncoderPosition(ArmMechanismPosition.ARM_DOWN.motorPositionRad);
@@ -129,14 +136,14 @@ public class Intake extends FullSubsystem {
   }
 
   public Command RunIntake(BooleanSupplier dislodgeBalls) {
-    return runEnd(
-        () -> {
-          setRollerOutput(IntakeConstants.intakingRollerOutput);
-          armOutputMode = IntakeOutputMode.COAST;
-        },
-        () -> {
-          setRollerOutput(0);
-        });
+    return Commands.repeatingSequence(
+            runOnce(() -> {
+              setRollerOutput(IntakeConstants.intakingRollerOutput);
+              armOutputMode = IntakeOutputMode.COAST;
+            }),
+            Commands.waitUntil(this::isRollersStalled),
+            RunOuttake(() -> false).withTimeout(0.5)
+    ).finallyDo(() -> setRollerOutput(0));
   }
 
   public Command RunOuttake(BooleanSupplier dislodgeBalls) {
