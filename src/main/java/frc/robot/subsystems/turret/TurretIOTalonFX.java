@@ -14,7 +14,6 @@ import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -44,11 +43,11 @@ public class TurretIOTalonFX implements TurretIO {
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         Units.radiansToRotations(TurretConstants.hardForwardLimit * TurretConstants.gearRatio);
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
 
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
         Units.radiansToRotations(TurretConstants.hardReverseLimit * TurretConstants.gearRatio);
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
 
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -106,9 +105,7 @@ public class TurretIOTalonFX implements TurretIO {
   }
 
   public double convertToTurretPosition(double angleRad) {
-    Rotation2d withInitialPos =
-        Rotation2d.fromRadians(angleRad)
-            .minus(new Rotation2d(TurretConstants.physicalStartingPosition));
-    return withInitialPos.getRotations() * TurretConstants.gearRatio;
+    double angleRot = Units.radiansToRotations(angleRad);
+    return angleRot * TurretConstants.gearRatio;
   }
 }
