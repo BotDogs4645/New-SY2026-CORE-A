@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "UpperScore"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "ExtendIntake"

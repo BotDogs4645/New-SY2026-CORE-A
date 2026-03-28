@@ -17,7 +17,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "UpperScoreAndSweepPath2"
+                  "pathName": "LowerScoreAndSweepPath1"
                 }
               }
             ]
@@ -32,7 +32,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "UpperScoreAndSweepPath3"
+            "pathName": "LowerScoreAndSweepPath2"
           }
         },
         {
@@ -44,7 +44,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "UpperScoreAndSweepPath4"
+            "pathName": "LowerScoreAndSweepPath3"
           }
         },
         {
