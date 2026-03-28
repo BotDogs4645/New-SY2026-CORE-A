@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,8 +26,10 @@ public class Shooter extends FullSubsystem {
 
   private double shooterGoalSpeedRadPerSec = 0.0;
   private boolean atGoalSpeed = false;
+  private boolean prevAtGoalSpeed = false;
   private int prevShotCounter = 0;
   private int shotCounter = 0;
+  private Debouncer isAtGoalSpeedDebouncer = new Debouncer(0.06, DebounceType.kFalling);
 
   /** Creates a new Shooter. */
   public Shooter(ShooterIO io) {
@@ -41,6 +45,10 @@ public class Shooter extends FullSubsystem {
 
   @AutoLogOutput
   public boolean isAtGoalSpeed() {
+    if (prevAtGoalSpeed && !atGoalSpeed) {
+      shotCounter++;
+    }
+    prevAtGoalSpeed = atGoalSpeed;
     return atGoalSpeed;
   }
 
@@ -49,7 +57,10 @@ public class Shooter extends FullSubsystem {
     if (shooterGoalSpeedRadPerSec == 0.0) {
       outputs.shooterMode = ShooterOutputMode.BRAKE;
       outputs.shooterGoalSpeedRadPerSec = 0.0;
-      atGoalSpeed = Math.abs(shooterGoalSpeedRadPerSec - inputs.shooterVelocityRadPerSec) < 12;
+      // atGoalSpeed =
+      // isAtGoalSpeedDebouncer.calculate(
+      // Math.abs(shooterGoalSpeedRadPerSec - inputs.shooterVelocityRadPerSec) < 13);
+      atGoalSpeed = false;
     } else {
       outputs.shooterMode = ShooterOutputMode.CLOSED_LOOP;
       outputs.shooterGoalSpeedRadPerSec = shooterGoalSpeedRadPerSec;
@@ -58,19 +69,27 @@ public class Shooter extends FullSubsystem {
 
       if (atGoalSpeed) {
         // we were at speed, did we drop velocity suddenly?
-        if (error > 10) {
-          shotCounter++;
-          atGoalSpeed = false;
+        if (Math.abs(error) > 12 && inputs.shooterVelocityRadPerSec < shooterGoalSpeedRadPerSec) {
+          atGoalSpeed = isAtGoalSpeedDebouncer.calculate(false);
+        } else {
+          atGoalSpeed = isAtGoalSpeedDebouncer.calculate(true);
         }
       } else {
         // we are recovering or spinning up
-        if (Math.abs(error) < 12) {
-          atGoalSpeed = true;
+        if (Math.abs(error) < 12 || inputs.shooterVelocityRadPerSec > shooterGoalSpeedRadPerSec) {
+          atGoalSpeed = isAtGoalSpeedDebouncer.calculate(true);
+        } else {
+          atGoalSpeed = isAtGoalSpeedDebouncer.calculate(false);
         }
       }
     }
 
     io.applyOutputs(outputs);
+  }
+
+  @AutoLogOutput
+  public int getShotCount() {
+    return shotCounter;
   }
 
   public void setShooterGoalSpeedRadPerSec(double speedRadPerSec) {

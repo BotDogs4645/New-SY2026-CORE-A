@@ -7,7 +7,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.ControlRequest;
-import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -27,7 +27,7 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final StatusSignal<AngularVelocity> shooterVelocityRotPerSec = shooterMotor.getVelocity();
   private final StatusSignal<Voltage> shooterVoltage = shooterMotor.getMotorVoltage();
   private final CoastOut coastRequest = new CoastOut();
-  private final NeutralOut brakeRequest = new NeutralOut();
+  private final StaticBrake brakeRequest = new StaticBrake();
   private final VelocityVoltage shooterVelocityRequest = new VelocityVoltage(0.0);
 
   private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
@@ -38,7 +38,7 @@ public class ShooterIOTalonFX implements ShooterIO {
         ShooterConstants.motorInverted
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
-    shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     shooterConfig.Slot0.kV = ShooterConstants.kV;
     shooterConfig.Slot0.kP = ShooterConstants.kP;
     tryUntilOk(5, () -> shooterMotor.getConfigurator().apply(shooterConfig, 0.25));
