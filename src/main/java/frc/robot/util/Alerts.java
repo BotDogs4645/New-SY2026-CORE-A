@@ -13,11 +13,14 @@ public final class Alerts {
         new Alert("Shooter Alerts", "Cannot shoot - return to alliance side", AlertType.kError);
     public static final Alert shooterRangeAlert =
         new Alert("Shooter Alerts", "Cannot shoot - target out of range", AlertType.kError);
+    public static final Alert staticAimAlert =
+        new Alert("Shooter Alerts", "Shooter Driver Override", AlertType.kWarning);
 
     public static void resetAutoShotAlerts() {
       turretCannotReachAlert.set(false);
       outOfBoundsAlert.set(false);
       shooterRangeAlert.set(false);
+      staticAimAlert.set(false);
     }
   }
 }

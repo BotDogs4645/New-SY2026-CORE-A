@@ -13,7 +13,6 @@ import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.networktables.StringTopic;
-import org.littletonrobotics.junction.Logger;
 
 public final class Elastic {
   private static final StringTopic notificationTopic =
@@ -56,13 +55,16 @@ public final class Elastic {
 
   public static void removeNotification(Notification notification) {
     try {
-      Logger.recordOutput("Elastic/currentNotif", notificationSubscriber.get());
       if (notificationSubscriber.get().equals(objectMapper.writeValueAsString(notification))) {
         notificationPublisher.set("");
       }
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
+  }
+
+  public static void clearAllNotifications() {
+    notificationPublisher.set("");
   }
 
   /**
