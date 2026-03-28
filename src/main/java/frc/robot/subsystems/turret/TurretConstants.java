@@ -7,10 +7,10 @@ public final class TurretConstants {
   public static final int motorCanId = 23;
   public static final CANBus motorCanBus = new CANBus("CANivore");
 
-  public static final double kP = 5;
-  public static final double kI = 0.2;
+  public static final double kP = 5.5;
+  public static final double kI = 0.3;
   public static final double kD = 0.4;
-  public static final double kS = 0.04;
+  public static final double kS = 0.05;
 
   public static final double motionMagicCruiseVelocity = 20;
   public static final double motionMagicAcceleration = 15;
@@ -19,8 +19,11 @@ public final class TurretConstants {
   // in real turret radians:
   public static final double encoderStartingPosition = -Math.PI;
   public static final double physicalStartingPosition = 0;
-  public static final double hardReverseLimit = -(Math.PI * 3.0) / 2.0;
-  public static final double hardForwardLimit = 1.418525497443357;
+  public static final double hardReverseLimit = -4.6;
+  public static final double hardForwardLimit = 2.4;
+
+  public static final double offsetPeriodicDegrees = 0.6;
+  public static final double staticOverrideOffsetPeriodicDegrees = 4;
 
   public static final double gearRatio = 3.3333;
 

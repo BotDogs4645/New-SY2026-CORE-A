@@ -7,7 +7,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.ControlModeValue;
@@ -29,7 +29,7 @@ public class TurretIOTalonFX implements TurretIO {
   private final StatusSignal<AngularVelocity> velocityRotPerSec = turretMotor.getVelocity();
   private final StatusSignal<ControlModeValue> activeControl = turretMotor.getControlMode();
 
-  private final NeutralOut brakeRequest = new NeutralOut();
+  private final StaticBrake brakeRequest = new StaticBrake();
   private final CoastOut coastRequest = new CoastOut();
   private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
 
@@ -43,14 +43,14 @@ public class TurretIOTalonFX implements TurretIO {
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         Units.radiansToRotations(TurretConstants.hardForwardLimit * TurretConstants.gearRatio);
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
 
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
         Units.radiansToRotations(TurretConstants.hardReverseLimit * TurretConstants.gearRatio);
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
 
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     motorConfig.Slot0.kP = TurretConstants.kP;
     motorConfig.Slot0.kD = TurretConstants.kD;

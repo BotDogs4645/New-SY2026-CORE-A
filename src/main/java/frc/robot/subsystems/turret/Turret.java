@@ -4,30 +4,32 @@
 
 package frc.robot.subsystems.turret;
 
-import com.ctre.phoenix6.controls.NeutralOut;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.turret.TurretIO.TurretIOOutputs;
 import frc.robot.subsystems.turret.TurretIO.TurretOutputMode;
 import frc.robot.util.FullSubsystem;
 import java.util.Arrays;
 import java.util.OptionalDouble;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Turret extends FullSubsystem {
 
   private TurretIO io;
-  private NeutralOut neutralControlRequest = new NeutralOut();
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
   private final TurretIOOutputs outputs = new TurretIOOutputs();
   public Alert turretDisconnectedAlert =
       new Alert("IO Status", "Turret disconnected!", AlertType.kError);
 
   private double goalPositionRad = 0;
+  private double appliedOffsetRad = 0;
   private boolean noPositionAvailable = false;
   private TurretOutputMode outputMode = TurretOutputMode.BRAKE;
   private boolean atGoalPosition = false;
@@ -52,11 +54,13 @@ public class Turret extends FullSubsystem {
   @Override
   public void periodicAfterScheduler() {
     outputs.mode = outputMode;
-    outputs.goalPositionRad = goalPositionRad;
+    outputs.goalPositionRad = goalPositionRad + appliedOffsetRad;
     io.applyOutputs(outputs);
     if (outputMode == TurretOutputMode.POSITION) {
       double positionToleranceRad = Units.degreesToRadians(4);
-      atGoalPosition = Math.abs(inputs.realPositionRad - goalPositionRad) < positionToleranceRad;
+      atGoalPosition =
+          Math.abs(inputs.realPositionRad - (goalPositionRad + appliedOffsetRad))
+              < positionToleranceRad;
     } else {
       atGoalPosition = false;
     }
@@ -65,6 +69,38 @@ public class Turret extends FullSubsystem {
   public void setGoalPositionRad(double positionRad) {
     outputMode = TurretOutputMode.POSITION;
     goalPositionRad = positionRad;
+  }
+
+  public enum Direction {
+    CW,
+    CCW
+  }
+
+  public void addOffset(Direction direction, double angleDegrees) {
+    if (direction == Direction.CW) {
+      appliedOffsetRad -= Units.degreesToRadians(angleDegrees);
+    } else {
+      appliedOffsetRad += Units.degreesToRadians(angleDegrees);
+    }
+  }
+
+  public void setOffset(double angleDegrees) {
+    appliedOffsetRad = Units.degreesToRadians(angleDegrees);
+  }
+
+  public Command AddTurretOffset(Direction direction, BooleanSupplier staticAiming) {
+    return Commands.run(
+        () -> {
+          if (staticAiming.getAsBoolean()) {
+            addOffset(direction, TurretConstants.staticOverrideOffsetPeriodicDegrees);
+          } else {
+            addOffset(direction, TurretConstants.offsetPeriodicDegrees);
+          }
+        });
+  }
+
+  public Command ResetTurretOffset() {
+    return Commands.runOnce(() -> setOffset(0));
   }
 
   private void setMotorBrake() {
