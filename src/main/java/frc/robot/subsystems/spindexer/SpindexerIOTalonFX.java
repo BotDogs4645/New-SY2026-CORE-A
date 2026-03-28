@@ -8,7 +8,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -28,7 +28,7 @@ public class SpindexerIOTalonFX implements SpindexerIO {
   private final StatusSignal<Angle> positionRot = spindexerMotor.getPosition();
   private final StatusSignal<AngularVelocity> velocityRotPerSec = spindexerMotor.getVelocity();
 
-  private final NeutralOut brakeControl = new NeutralOut();
+  private final StaticBrake brakeControl = new StaticBrake();
   private final DutyCycleOut dutyCycleControl = new DutyCycleOut(0);
   private final CoastOut coastControl = new CoastOut();
 
@@ -40,7 +40,7 @@ public class SpindexerIOTalonFX implements SpindexerIO {
     motorConfig.MotionMagic.MotionMagicCruiseVelocity =
         SpindexerConstants.motionMagicCruiseVelocity;
     motorConfig.MotionMagic.MotionMagicAcceleration = SpindexerConstants.motionMagicAcceleration;
-    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     motorConfig.MotorOutput.Inverted =
         SpindexerConstants.isInverted
             ? InvertedValue.Clockwise_Positive
@@ -59,7 +59,7 @@ public class SpindexerIOTalonFX implements SpindexerIO {
 
     inputs.positionRad = Units.rotationsToRadians(positionRot.getValueAsDouble());
     inputs.velocityRadPerSec = Units.rotationsToRadians(velocityRotPerSec.getValueAsDouble());
-    inputs.supplyCurrent = Units.rotationsToRadians(supplyCurrent.getValueAsDouble());
+    inputs.supplyCurrent = supplyCurrent.getValueAsDouble();
     inputs.connected = connectedDebounce.calculate(status.isOK());
   }
 

@@ -13,4 +13,7 @@ public final class SpindexerConstants {
 
   public static final boolean isInverted = true;
   public static final double activeSpeed = 0.3;
+
+  public static final double stalledCurrentThreshold = 20;
+  public static final double stalledSpeedThresholdRadPerSec = 6;
 }

@@ -51,6 +51,11 @@ public class Spindexer extends FullSubsystem {
   }
 
   public Command RunSpindexer() {
+    // return Commands.repeatingSequence(
+    // runOnce(() -> setTargetSpeed(SpindexerConstants.activeSpeed)),
+    // Commands.waitUntil(this::isStalled),
+    // ReverseSpindexer().withTimeout(0.4))
+    // .finallyDo(() -> setTargetSpeed(0));
     return runEnd(
         () -> {
           setTargetSpeed(SpindexerConstants.activeSpeed);
@@ -58,6 +63,10 @@ public class Spindexer extends FullSubsystem {
         () -> {
           setTargetSpeed(0);
         });
+  }
+
+  public Command ReverseSpindexer() {
+    return runOnce(() -> setTargetSpeed(-SpindexerConstants.activeSpeed));
   }
 
   public Command StartSpindexer() {
