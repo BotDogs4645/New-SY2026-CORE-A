@@ -3,11 +3,27 @@ package frc.robot.util;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 
 /** utility class for creating controller rumble commands */
 public final class Rumble {
   private Rumble() {} // prevent instantiation
+
+  /**
+   * creates a command that rumbles both motors until interrupted
+   *
+   * @param controllers the controllers to rumble
+   * @param intensity rumble intensity from 0.0 to 1.0
+   * @return command that rumbles until interrupted
+   */
+  public static Command rumble(CommandGenericHID[] controllers, double intensity) {
+    ParallelCommandGroup commandGroup = new ParallelCommandGroup(Commands.none());
+    for (CommandGenericHID controller : controllers) {
+      commandGroup.addCommands(rumble(controller, intensity, RumbleType.kBothRumble));
+    }
+    return commandGroup;
+  }
 
   /**
    * creates a command that rumbles both motors until interrupted
@@ -67,7 +83,6 @@ public final class Rumble {
       CommandGenericHID controller, double intensity, double seconds) {
     return rumble(controller, intensity).withTimeout(seconds);
   }
-
   /**
    * creates a command that rumbles left motor for a specified duration
    *
@@ -111,6 +126,29 @@ public final class Rumble {
       double offSeconds,
       int repeats) {
     return rumble(controller, intensity)
+        .withTimeout(onSeconds)
+        .andThen(Commands.waitSeconds(offSeconds))
+        .repeatedly()
+        .withTimeout((onSeconds + offSeconds) * repeats - offSeconds);
+  }
+
+  /**
+   * creates a command that rumbles in a repeating pattern
+   *
+   * @param controller the controller to rumble
+   * @param intensity rumble intensity from 0.0 to 1.0
+   * @param onSeconds duration of each rumble pulse
+   * @param offSeconds pause between pulses
+   * @param repeats number of pulses
+   * @return command that rumbles in a pattern
+   */
+  public static Command rumblePattern(
+      CommandGenericHID[] controllers,
+      double intensity,
+      double onSeconds,
+      double offSeconds,
+      int repeats) {
+    return rumble(controllers, intensity)
         .withTimeout(onSeconds)
         .andThen(Commands.waitSeconds(offSeconds))
         .repeatedly()
