@@ -4,7 +4,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import frc.robot.subsystems.intake.IntakeConstants.ArmMechanismPosition;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOOutputs;
 import frc.robot.subsystems.intake.IntakeIO.IntakeOutputMode;
@@ -84,13 +83,15 @@ public class Intake extends FullSubsystem {
   @AutoLogOutput(key = "Intake/Arm/IsStalled")
   public boolean isArmStalled() {
     return inputs.armSupplyCurrent > IntakeConstants.forceExtendArmStallCurrent
-        && armOutputMode == IntakeOutputMode.DUTY_CYCLE;
+        && armOutputMode == IntakeOutputMode.DUTY_CYCLE
+        && Math.abs(inputs.armVelocityRadPerSec) < IntakeConstants.armStallVelocityThreshold;
   }
-  
+
   @AutoLogOutput(key = "Intake/Roller/IsStalled")
   public boolean isRollersStalled() {
     return inputs.rollerSupplyCurrent > IntakeConstants.rollerStallCurrent
-        && rollerOutputLevel != 0.0 && Math.abs(inputs.rollerVelocityRadPerSec) < IntakeConstants.rollerStallVelocityThreshold;
+        && rollerOutputLevel != 0.0
+        && Math.abs(inputs.rollerVelocityRadPerSec) < IntakeConstants.rollerStallVelocityThreshold;
   }
 
   @AutoLogOutput
@@ -106,19 +107,19 @@ public class Intake extends FullSubsystem {
   public Command ExtendIntake() {
 
     return Commands.sequence(
-            runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_HALF_DOWN)),
-            Commands.waitUntil(this::armAtGoalPosition),
-            runOnce(() -> setRollerOutput(IntakeConstants.armDownRollerOutput)),
-            runOnce(() -> setArmDutyCycleOut(IntakeConstants.forceExtendArmOutput)),
-            Commands.waitUntil(this::isArmStalled),
-            runOnce(
-                () -> {
-                  io.setArmEncoderPosition(ArmMechanismPosition.ARM_DOWN.motorPositionRad);
-                  setRollerOutput(0);
-                  armOutputMode = IntakeOutputMode.COAST;
-                  hasExtendedIntake = true;
-                }))
-        .unless(this::hasExtendedIntake);
+        runOnce(() -> setArmGoalPosition(ArmMechanismPosition.ARM_HALF_DOWN))
+            .unless(this::hasExtendedIntake),
+        Commands.waitUntil(this::armAtGoalPosition).unless(this::hasExtendedIntake),
+        runOnce(() -> setRollerOutput(IntakeConstants.armDownRollerOutput)),
+        runOnce(() -> setArmDutyCycleOut(IntakeConstants.forceExtendArmOutput)),
+        Commands.waitUntil(this::isArmStalled),
+        runOnce(
+            () -> {
+              io.setArmEncoderPosition(ArmMechanismPosition.ARM_DOWN.motorPositionRad);
+              setRollerOutput(0);
+              armOutputMode = IntakeOutputMode.COAST;
+              hasExtendedIntake = true;
+            }));
   }
 
   public Command StopIntake() {
@@ -137,13 +138,14 @@ public class Intake extends FullSubsystem {
 
   public Command RunIntake(BooleanSupplier dislodgeBalls) {
     return Commands.repeatingSequence(
-            runOnce(() -> {
-              setRollerOutput(IntakeConstants.intakingRollerOutput);
-              armOutputMode = IntakeOutputMode.COAST;
-            }),
+            runOnce(
+                () -> {
+                  setRollerOutput(IntakeConstants.intakingRollerOutput);
+                  armOutputMode = IntakeOutputMode.COAST;
+                }),
             Commands.waitUntil(this::isRollersStalled),
-            RunOuttake(() -> false).withTimeout(0.5)
-    ).finallyDo(() -> setRollerOutput(0));
+            RunOuttake(() -> false).withTimeout(0.5))
+        .finallyDo(() -> setRollerOutput(0));
   }
 
   public Command RunOuttake(BooleanSupplier dislodgeBalls) {
@@ -155,5 +157,20 @@ public class Intake extends FullSubsystem {
         () -> {
           setRollerOutput(0);
         });
+  }
+
+  public Command PushBallsIntoSpindexer() {
+    return Commands.sequence(
+            runOnce(
+                () -> {
+                  setArmGoalPosition(ArmMechanismPosition.DISLODGE_BALLS);
+                }),
+            Commands.waitUntil(this::armAtGoalPosition),
+            runOnce(() -> setArmDutyCycleOut(IntakeConstants.forceExtendArmOutput)),
+            Commands.waitUntil(this::isArmStalled))
+        .finallyDo(
+            () -> {
+              armOutputMode = IntakeOutputMode.COAST;
+            });
   }
 }

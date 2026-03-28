@@ -9,7 +9,7 @@ import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -34,7 +34,7 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<Voltage> rollerVoltage = rollerMotor.getMotorVoltage();
   private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
   private final DutyCycleOut armDutyCycleOut = new DutyCycleOut(0);
-  private final NeutralOut neutralOut = new NeutralOut();
+  private final StaticBrake staticBrake = new StaticBrake();
   private final CoastOut coastOut = new CoastOut();
   private final MotionMagicVoltage armRequest = new MotionMagicVoltage(0.0);
   private final StatusSignal<Current> armSupplyCurrent = armMotor.getSupplyCurrent();
@@ -59,7 +59,7 @@ public class IntakeIOTalonFX implements IntakeIO {
         break;
       }
       case BRAKE -> {
-        rollerMotor.setControl(neutralOut);
+        rollerMotor.setControl(staticBrake);
         break;
       }
       case DUTY_CYCLE -> {
@@ -81,7 +81,7 @@ public class IntakeIOTalonFX implements IntakeIO {
         break;
       }
       case BRAKE -> {
-        armMotor.setControl(neutralOut);
+        armMotor.setControl(staticBrake);
         break;
       }
       case DUTY_CYCLE -> {
@@ -98,7 +98,7 @@ public class IntakeIOTalonFX implements IntakeIO {
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
     // intake config here
-    intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     tryUntilOk(5, () -> rollerMotor.getConfigurator().apply(intakeConfig, 0.25));
 
     var armConfig = new TalonFXConfiguration();
