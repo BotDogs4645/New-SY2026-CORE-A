@@ -29,6 +29,8 @@ public class Leds extends SubsystemBase {
       new ColorFlowAnimation(0, 300).withColor(new RGBWColor(0, 255, 0)).withFrameRate(400);
   private ColorFlowAnimation whiteColorFlow =
       new ColorFlowAnimation(0, 300).withColor(new RGBWColor(255, 255, 255)).withFrameRate(400);
+  private StrobeAnimation orangeStrobeAnimation =
+      new StrobeAnimation(0, 300).withColor(new RGBWColor(255, 120, 0)).withFrameRate(0.5);
 
   public Leds() {
     var config = new CANdleConfiguration();
@@ -88,6 +90,18 @@ public class Leds extends SubsystemBase {
         () -> {
           Logger.recordOutput("LED/LEDColor", "COLOR_FLOW_WHITE");
           candle.setControl(whiteColorFlow);
+        },
+        () -> {
+          Logger.recordOutput("LED/LEDColor", "RAINBOW");
+          candle.setControl(rainbowAnimation);
+        });
+  }
+
+  public Command OrangeStrobe() {
+    return runEnd(
+        () -> {
+          Logger.recordOutput("LED/LEDColor", "ORANGE_STROBE");
+          candle.setControl(orangeStrobeAnimation);
         },
         () -> {
           Logger.recordOutput("LED/LEDColor", "RAINBOW");
