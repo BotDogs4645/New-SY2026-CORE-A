@@ -5,6 +5,8 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.networktables.ConnectionInfo;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import gg.questnav.questnav.PoseFrame;
@@ -21,19 +23,30 @@ public class VisionIOQuestNav implements VisionIO {
       new Alert("QuestNav battery below 30%! Charge it!!!", AlertType.kWarning);
   private final String name;
   private Transform3d calibrationTransform = new Transform3d();
+  private boolean previouslyConnected = false;
+  private Pose3d initialRobotPose = new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0));
 
   public VisionIOQuestNav(String name) {
     this.name = name;
     this.questNav = new QuestNav();
     this.robotToQuest = VisionConstants.robotToQuestTransform;
+    NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    ConnectionInfo[] conns = inst.getConnections();
   }
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
     questNav.commandPeriodic();
     inputs.name = name;
-
     inputs.connected = questNav.isConnected();
+    if (!previouslyConnected && inputs.connected) {
+      NetworkTableInstance inst = NetworkTableInstance.getDefault();
+      for (ConnectionInfo conn : inst.getConnections()) {
+        if (conn.remote_id.contains("QuestNav")) {
+          inputs.ipAddress = conn.remote_ip;
+        }
+      }
+    }
     questNav
         .getBatteryPercent()
         .ifPresent(battery -> lowBatteryAlert.set(battery < 30.0 && questNav.isConnected()));
@@ -79,6 +92,7 @@ public class VisionIOQuestNav implements VisionIO {
             robotPose.getY(),
             0,
             new Rotation3d(0, 0, robotPose.getRotation().getRadians()));
+    initialRobotPose = desiredRobotPose;
     setPose(desiredRobotPose);
     // PoseFrame[] frames = questNav.getAllUnreadPoseFrames();
     // if (frames.length > 0) {

@@ -22,6 +22,7 @@ public interface VisionIO {
     public String name = "";
     public double batteryLevel = 0;
     public double temp = 0;
+    public String ipAddress = "";
   }
 
   /** Represents the angle to a simple target, not used for pose estimation. */
