@@ -52,15 +52,15 @@ public class AutoShotCalculator {
   private static final LoggedTunableNumber ballDiameterMeters =
       new LoggedTunableNumber("AutoShot/ballDiameterMeters", 0.150114);
   private static final LoggedTunableNumber dragCoefficient =
-      new LoggedTunableNumber("AutoShot/dragCoefficient", 0.77);
+      new LoggedTunableNumber("AutoShot/dragCoefficient", 0.94);
   private static final LoggedTunableNumber airDensityKgPerM3 =
       new LoggedTunableNumber("AutoShot/airDensityKgPerM3", 1.225);
 
   // flywheel
   private static final LoggedTunableNumber flywheelSpeedDropRadPerSec =
-      new LoggedTunableNumber("AutoShot/flywheelSpeedDropRadPerSec", 47.5);
+      new LoggedTunableNumber("AutoShot/flywheelSpeedDropRadPerSec", 47.8);
   private static final LoggedTunableNumber launchEfficiency =
-      new LoggedTunableNumber("AutoShot/launchEfficiency", 0.975);
+      new LoggedTunableNumber("AutoShot/launchEfficiency", 0.92);
 
   // simulation
   private static final LoggedTunableNumber simTimeStepSecs =
@@ -79,6 +79,13 @@ public class AutoShotCalculator {
       new LoggedTunableNumber("AutoShot/maxLaunchSpeedMps", 4);
   private static final LoggedTunableNumber minLaunchSpeedMps =
       new LoggedTunableNumber("AutoShot/minLaunchSpeedMps", 2);
+  private static final LoggedTunableNumber launchSpeedLinearCoefficient =
+      new LoggedTunableNumber("AutoShot/launchSpeedLinearCoefficient", 0.9);
+  private static final LoggedTunableNumber launchSpeedYIntercept =
+      new LoggedTunableNumber("AutoShot/launchSpeedYIntercept", 6);
+
+  private static final LoggedTunableNumber flightTimeConstant =
+      new LoggedTunableNumber("AutoShot/flightTimeConstant", 14);
 
   enum ShooterDistanceCutoff {
     L1(2, 7),
@@ -95,6 +102,11 @@ public class AutoShotCalculator {
       this.maxDistance = maxDistance;
       this.speedMps = speedMps;
     }
+  }
+
+  double getSpeedFromDistance(double distance) {
+    return launchSpeedLinearCoefficient.getAsDouble() * distance
+        + launchSpeedYIntercept.getAsDouble();
   }
 
   // trajectory visualization
@@ -340,10 +352,13 @@ public class AutoShotCalculator {
       }
     }
 
-    double maxDist = simulateTrajectory(closestCutoff.speedMps, pitchRad, targetHeight);
+    double speedFromDistance = getSpeedFromDistance(targetDistance);
+
+    double maxDist = simulateTrajectory(speedFromDistance, pitchRad, targetHeight);
     if (Math.abs(maxDist - targetDistance) <= 0.15) {
-      Logger.recordOutput("AutoShot/detectedCutoff", closestCutoff.name());
-      return closestCutoff.speedMps;
+      Logger.recordOutput("AutoShot/detectedCutoffSpeedMps", closestCutoff.speedMps);
+      Logger.recordOutput("AutoShot/actualSpeedMps", speedFromDistance);
+      return speedFromDistance;
     }
 
     return -1;
@@ -454,6 +469,6 @@ public class AutoShotCalculator {
   /** Rough flight time estimate for velocity compensation. */
   private double estimateFlightTime(double distance) {
     // assume ~20 m/s average speed as rough estimate
-    return distance / 17.0;
+    return distance / flightTimeConstant.getAsDouble();
   }
 }
