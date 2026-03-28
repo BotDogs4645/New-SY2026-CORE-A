@@ -11,7 +11,10 @@ public final class KickerConstants {
   public static final double kV = 0.1205;
   public static final double kP = 0.05;
 
-  public static final double defaultSpeedRadPerSec = 300;
+  public static final double defaultSpeedRadPerSec = 320;
+
+  public static final double stalledSpeedThresholdRadPerSec = 2;
+  public static final double stalledCurrentThreshold = 10;
 
   // not yet implemented (amps)
   public static final double supplyCurrentLimit = 1000;

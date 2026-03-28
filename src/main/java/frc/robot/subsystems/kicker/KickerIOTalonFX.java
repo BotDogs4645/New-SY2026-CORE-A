@@ -7,7 +7,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.ControlRequest;
-import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -27,7 +27,7 @@ public class KickerIOTalonFX implements KickerIO {
   private final StatusSignal<AngularVelocity> kickerVelocityRotPerSec = kickerMotor.getVelocity();
   private final StatusSignal<Voltage> kickerVoltage = kickerMotor.getMotorVoltage();
   private final CoastOut coastRequest = new CoastOut();
-  private final NeutralOut brakeRequest = new NeutralOut();
+  private final StaticBrake staticBrake = new StaticBrake();
   private final VelocityVoltage kickerVelocityRequest = new VelocityVoltage(0.0);
 
   private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
@@ -38,7 +38,7 @@ public class KickerIOTalonFX implements KickerIO {
         KickerConstants.motorInverted
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
-    kickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    kickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kickerConfig.Slot0.kV = KickerConstants.kV;
     kickerConfig.Slot0.kP = KickerConstants.kP;
     tryUntilOk(5, () -> kickerMotor.getConfigurator().apply(kickerConfig, 0.25));
@@ -72,7 +72,7 @@ public class KickerIOTalonFX implements KickerIO {
     switch (outputs.kickerMode) {
       case BRAKE:
         Logger.recordOutput("Kicker/GoalSpeedRadPerSec", 0.0);
-        kickerMotor.setControl(brakeRequest);
+        kickerMotor.setControl(staticBrake);
 
       case COAST:
         Logger.recordOutput("Kicker/GoalSpeedRadPerSec", 0.0);
