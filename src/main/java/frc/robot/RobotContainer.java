@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -45,6 +46,7 @@ import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.Turret.Direction;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
@@ -52,9 +54,12 @@ import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.Alerts;
 import frc.robot.util.AutoShotCalculator;
+import frc.robot.util.Elastic;
 import frc.robot.util.LoggedTunableNumber;
+import frc.robot.util.PathPlanOnTheFly;
 import frc.robot.util.Rumble;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -83,11 +88,14 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController driveController = new CommandXboxController(0);
   private final CommandXboxController operatorController = new CommandXboxController(1);
+  private final CommandXboxController[] bothControllers = {operatorController, driveController};
   // private final CommandJoystick operatorPanel = new CommandJoystick(1);
   private final Field2d m_field = new Field2d();
 
   private final AutoShotCalculator shotCalculator;
   private AutoShotCalculator.ShotSolution latestSolution = AutoShotCalculator.ShotSolution.none();
+  private boolean isAutoAiming = false;
+  private boolean isStaticAiming = false;
   private final Trigger isUnableToShoot = new Trigger(() -> !latestSolution.isSolutionFound());
   private static final LoggedTunableNumber hoodOffset =
       new LoggedTunableNumber("AutoShot/hoodOffset", 0.122);
@@ -101,7 +109,7 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
-    questNavIO = new VisionIOQuestNav("questnav");
+    questNavIO = new VisionIOQuestNav("questnav-fl");
 
     Logger.recordOutput(
         "AutoShot/leftPassTargetBlue",
@@ -196,6 +204,8 @@ public class RobotContainer {
     NamedCommands.registerCommand("AutoAim", AutoAim(this::getHubTarget));
     NamedCommands.registerCommand("FeedBallsToShooter", FeedBallsToShooter());
     NamedCommands.registerCommand("AimAndShootBalls4Sec", AimAndShootBalls(4));
+    NamedCommands.registerCommand("AimAndShootBalls4Ever", AimAndShootBalls());
+    NamedCommands.registerCommand("PushBallsIntoSpindexer", intake.PushBallsIntoSpindexer());
 
     shotCalculator = new AutoShotCalculator(turret);
 
@@ -257,29 +267,50 @@ public class RobotContainer {
     driveController.leftTrigger().whileTrue(intake.RunIntake(driveController.x()));
     driveController.leftBumper().whileTrue(intake.RunOuttake(driveController.x()));
 
-    operatorController.a().and(isUnableToShoot).whileTrue(Rumble.rumble(operatorController, 1.0));
-    operatorController.b().and(isUnableToShoot).whileTrue(Rumble.rumble(operatorController, 1.0));
+    operatorController.a().and(isUnableToShoot).whileTrue(Rumble.rumble(bothControllers, 1.0));
+    operatorController.b().and(isUnableToShoot).whileTrue(Rumble.rumble(bothControllers, 1.0));
+
+    operatorController.x().whileTrue(AimToDrop().alongWith(intake.RunOuttake(() -> false)));
+
+    operatorController.leftBumper().onTrue(intake.PushBallsIntoSpindexer());
+
+    operatorController
+        .povLeft()
+        .and(this::isAiming)
+        .whileTrue(turret.AddTurretOffset(Direction.CCW, this::isStaticAiming));
+    operatorController
+        .povRight()
+        .and(this::isAiming)
+        .whileTrue(turret.AddTurretOffset(Direction.CW, this::isStaticAiming));
 
     operatorController
         .a()
+        .and(() -> !isStaticAiming())
         .whileTrue(
             AutoAim(this::getHubTarget)
-                .deadlineFor(leds.TrueFalseColorFlow(isUnableToShoot.negate())));
+                .deadlineFor(leds.TrueFalseColorFlow(isUnableToShoot.negate()))
+                .onlyWhile(() -> !isStaticAiming()));
+
     operatorController
         .b()
+        .and(() -> !isStaticAiming())
         .whileTrue(
-            AutoAim(() -> getPassTarget(drive.getPose()))
-                .deadlineFor(leds.TrueFalseColorFlow(isUnableToShoot.negate())));
+            AutoAimToPass(() -> getPassTarget(drive.getPose()))
+                .onlyWhile(() -> !isStaticAiming()));
     operatorController.rightTrigger().whileTrue(FeedBallsToShooter());
     operatorController
         .rightBumper()
-        .onTrue(
-            intake.ExtendIntake()
-                .onlyIf(
-                    () -> {
-                      return !intake.hasExtendedIntake();
-                    })
-                .deadlineFor(leds.WhiteColorFlow()));
+        .onTrue(intake.ExtendIntake().deadlineFor(leds.WhiteColorFlow()));
+
+    operatorController
+        .button(7)
+        .toggleOnTrue(
+            StaticAim(this::getHubTarget, this::getStaticShootPose)
+                .deadlineFor(leds.OrangeStrobe()));
+
+    operatorController.button(7).onTrue(Rumble.rumblePattern(bothControllers, 1, 0.1, 0.1, 5));
+
+    driveController.x().whileTrue(PathPlanOnTheFly.NavigateTrench(drive));
   }
 
   /**
@@ -291,32 +322,111 @@ public class RobotContainer {
     return autoChooser.get();
   }
 
+  public Command AimAndShootBalls() {
+    return Commands.parallel(
+        AutoAim(this::getHubTarget),
+        Commands.sequence(
+            Commands.waitUntil(() -> latestSolution.isSolutionFound()),
+            Commands.waitUntil(shooter::isAtGoalSpeed),
+            Commands.waitUntil(turret::isAtGoalPosition),
+            FeedBallsToShooter()));
+  }
+
   public Command AimAndShootBalls(double timeout) {
     return Commands.parallel(
             AutoAim(this::getHubTarget),
             Commands.sequence(
                 Commands.waitUntil(() -> latestSolution.isSolutionFound()),
-                Commands.waitSeconds(2),
+                Commands.waitUntil(shooter::isAtGoalSpeed),
+                Commands.waitUntil(turret::isAtGoalPosition),
                 FeedBallsToShooter()))
         .withTimeout(timeout);
   }
 
   public Command FeedBallsToShooter() {
     return Commands.parallel(
-        kicker.RunKicker(),
+        kicker.RunKicker(shooter::isAtGoalSpeed),
         Commands.sequence(Commands.waitUntil(kicker::isAtGoalSpeed), spindexer.RunSpindexer()));
   }
 
   public Command AutoAim(Supplier<Translation3d> target) {
-    return Commands.runEnd(
+    return Commands.sequence(
+            turret.ResetTurretOffset(),
+            Commands.runEnd(
+                () -> {
+                  isAutoAiming = true;
+                  autoAimShooter(target.get());
+                },
+                () -> {
+                  isAutoAiming = false;
+                  stopAutoAim();
+                },
+                turret))
+        .withName("AutoAim")
+        .finallyDo(
             () -> {
-              autoAimShooter(target.get());
-            },
-            () -> {
+              isAutoAiming = false;
               stopAutoAim();
-            },
-            turret)
-        .withName("AutoAim");
+            });
+  }
+
+  public Command AutoAimToPass(Supplier<Translation3d> target) {
+    return Commands.sequence(
+            turret.ResetTurretOffset(),
+            Commands.runEnd(
+                () -> {
+                  isAutoAiming = true;
+                  autoAimShooterToPass(target.get());
+                },
+                () -> {
+                  isAutoAiming = false;
+                  stopAutoAim();
+                },
+                turret))
+        .withName("AutoAimToPass")
+        .finallyDo(
+            () -> {
+              isAutoAiming = false;
+              stopAutoAim();
+            });
+  }
+
+  public Command AimToDrop() {
+    return Commands.sequence(
+            turret.ResetTurretOffset(),
+            Commands.runEnd(
+                () -> {
+                  aimToDropBalls();
+                },
+                () -> {
+                  stopAutoAim();
+                },
+                turret,
+                hood,
+                shooter))
+        .withName("AimToDrop")
+        .finallyDo(
+            () -> {
+              isAutoAiming = false;
+              stopAutoAim();
+            });
+  }
+
+  public Command StaticAim(Supplier<Translation3d> target, Supplier<Pose2d> staticPose) {
+    return Commands.sequence(
+            turret.ResetTurretOffset(),
+            Commands.runEnd(
+                () -> {
+                  isStaticAiming = true;
+                  staticAimShooter(target.get(), staticPose.get());
+                  Alerts.AutoShot.staticAimAlert.set(true);
+                },
+                () -> {
+                  isStaticAiming = false;
+                  stopAutoAim();
+                },
+                turret))
+        .withName("StaticAim");
   }
 
   public Command ShootBalls() {
@@ -324,7 +434,7 @@ public class RobotContainer {
         shooter.RunShooter(),
         Commands.sequence(
             Commands.waitUntil(shooter::isAtGoalSpeed),
-            Commands.parallel(kicker.RunKicker(), spindexer.RunSpindexer())));
+            Commands.parallel(kicker.RunKicker(shooter::isAtGoalSpeed), spindexer.RunSpindexer())));
   }
 
   public Command StopShooting() {
@@ -337,6 +447,64 @@ public class RobotContainer {
             drive.getPose(), drive.getChassisSpeeds(), target, hood.getCurrentHoodRotation());
 
     if (latestSolution.isSolutionFound()) {
+      Elastic.clearAllNotifications();
+      Alerts.AutoShot.resetAutoShotAlerts();
+      turret.setGoalPositionRad(latestSolution.turretAngleRad());
+      double hoodGoalPosition =
+          (Math.PI / 2) - latestSolution.hoodAngleRad() - hoodOffset.getAsDouble();
+      hood.setGoalPosition(hoodGoalPosition);
+      shooter.setShooterGoalSpeedRadPerSec(latestSolution.flywheelVelocityRadPerSec());
+    } else {
+      switch (latestSolution.constrainingFactor()) {
+        case TURRET_RANGE:
+          Alerts.AutoShot.turretCannotReachAlert.set(true);
+        case LOCATION:
+          Alerts.AutoShot.outOfBoundsAlert.set(true);
+        case SHOOTER_RANGE:
+          Alerts.AutoShot.shooterRangeAlert.set(true);
+      }
+    }
+  }
+
+  public void autoAimShooterToPass(Translation3d target) {
+    latestSolution =
+        shotCalculator.calculate(
+            drive.getPose(), drive.getChassisSpeeds(), target, hood.getCurrentHoodRotation());
+
+    if (latestSolution.isSolutionFound()) {
+      Elastic.clearAllNotifications();
+      Alerts.AutoShot.resetAutoShotAlerts();
+      turret.setGoalPositionRad(latestSolution.turretAngleRad());
+      double hoodGoalPosition = (Math.PI / 2) - 0.48 - hoodOffset.getAsDouble();
+      hood.setGoalPosition(hoodGoalPosition);
+      // shooter.setShooterGoalSpeedRadPerSec(latestSolution.flywheelVelocityRadPerSec());
+      shooter.setShooterGoalSpeedRadPerSec(500);
+    } else {
+      switch (latestSolution.constrainingFactor()) {
+        case TURRET_RANGE:
+          Alerts.AutoShot.turretCannotReachAlert.set(true);
+        case LOCATION:
+          Alerts.AutoShot.outOfBoundsAlert.set(true);
+        case SHOOTER_RANGE:
+          Alerts.AutoShot.shooterRangeAlert.set(true);
+      }
+    }
+  }
+
+  public void aimToDropBalls() {
+    turret.setGoalPositionRad(0);
+    double hoodGoalPosition = (Math.PI / 2) - 1.15 - hoodOffset.getAsDouble();
+    hood.setGoalPosition(hoodGoalPosition);
+    shooter.setShooterGoalSpeedRadPerSec(190);
+  }
+
+  public void staticAimShooter(Translation3d target, Pose2d staticPose) {
+    ChassisSpeeds zeroSpeeds = new ChassisSpeeds(0, 0, 0);
+    latestSolution =
+        shotCalculator.calculate(staticPose, zeroSpeeds, target, hood.getCurrentHoodRotation());
+
+    if (latestSolution.isSolutionFound()) {
+      Elastic.clearAllNotifications();
       Alerts.AutoShot.resetAutoShotAlerts();
       turret.setGoalPositionRad(latestSolution.turretAngleRad());
       double hoodGoalPosition =
@@ -358,6 +526,7 @@ public class RobotContainer {
   public void stopAutoAim() {
     Alerts.AutoShot.resetAutoShotAlerts();
     shooter.setShooterGoalSpeedRadPerSec(0);
+    hood.setGoalPosition(0);
   }
 
   private Translation3d getHubTarget() {
@@ -365,6 +534,17 @@ public class RobotContainer {
         DriverStation.getAlliance().isPresent()
             && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
     return isRed ? FieldConstants.Hub.oppTopCenterPoint : FieldConstants.Hub.topCenterPoint;
+  }
+
+  private Pose2d getStaticShootPose() {
+    boolean isRed =
+        DriverStation.getAlliance().isPresent()
+            && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+    if (isRed) {
+      return FieldConstants.StaticShoot.redShoot;
+    } else {
+      return FieldConstants.StaticShoot.blueShoot;
+    }
   }
 
   private Translation3d getClosestPassTarget(Pose2d currentPose, Translation3d[] passTargets) {
@@ -397,5 +577,14 @@ public class RobotContainer {
     Logger.recordOutput("AutoShot/CurrentPose", currentPose);
     Logger.recordOutput("AutoShot/Target", target);
     return target;
+  }
+
+  @AutoLogOutput
+  private boolean isStaticAiming() {
+    return isStaticAiming;
+  }
+
+  private boolean isAiming() {
+    return isStaticAiming || isAutoAiming;
   }
 }

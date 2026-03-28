@@ -36,6 +36,11 @@ public class FieldConstants {
     return robotX < centerX ? Alliance.Blue : Alliance.Red;
   }
 
+  public static class StaticShoot {
+    public static final Pose2d blueShoot = new Pose2d(2.571, 5.472, new Rotation2d(0));
+    public static final Pose2d redShoot = new Pose2d(2.128, 5.988, new Rotation2d(0));
+  }
+
   /**
    * Officially defined and relevant vertical lines found on the field (defined by X-axis offset)
    */
@@ -141,31 +146,32 @@ public class FieldConstants {
 
   public static class PassTarget {
     // Relevant reference points on the opposite side
-    private static final double height = 0.5;
-    private static final double yOffset = 1;
+    private static final double height = 1;
+    private static final double yOffset = 1.1;
+    private static final double XOffset = 1;
 
     public static final Translation3d leftPassTargetBlue =
         new Translation3d(
-            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(23).get().getX(),
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(23).get().getX() - XOffset,
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(23).get().getY() - yOffset,
             height);
 
     // Relevant reference points on the opposite side
     public static final Translation3d rightPassTargetBlue =
         new Translation3d(
-            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(28).get().getX(),
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(28).get().getX() - XOffset,
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(28).get().getY() + yOffset,
             height);
 
     public static final Translation3d leftPassTargetRed =
         new Translation3d(
-            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(7).get().getX(),
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(7).get().getX() + XOffset,
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(7).get().getY() + yOffset,
             height);
 
     public static final Translation3d rightPassTargetRed =
         new Translation3d(
-            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(12).get().getX(),
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(12).get().getX() + XOffset,
             AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(12).get().getY() - yOffset,
             height);
 
