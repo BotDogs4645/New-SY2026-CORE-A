@@ -4,7 +4,7 @@
 
 package frc.robot.subsystems.hood;
 
-import com.ctre.phoenix6.controls.NeutralOut;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -25,7 +25,6 @@ import org.littletonrobotics.junction.Logger;
 public class Hood extends FullSubsystem {
 
   private HoodIO io;
-  private NeutralOut neutralControlRequest = new NeutralOut();
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
   private final HoodIOOutputs outputs = new HoodIOOutputs();
   private double targetPosition = 0;
@@ -33,6 +32,8 @@ public class Hood extends FullSubsystem {
   private boolean atGoalPosition = false;
   public Alert hoodDisconnectedAlert =
       new Alert("IO Status", "Hood disconnected!", AlertType.kError);
+
+  private final Debouncer atGoalDebouncer = new Debouncer(0.4, Debouncer.DebounceType.kFalling);
 
   /** Creates a new Hood. */
   public Hood(HoodIO io) {
@@ -64,12 +65,12 @@ public class Hood extends FullSubsystem {
   public void periodicAfterScheduler() {
     outputs.mode = outputMode;
     outputs.targetPosition = targetPosition;
-    double currentPosition = Units.radiansToRotations(inputs.positionRadWithoutOffset);
-    if (Math.abs(currentPosition - targetPosition) < 0.004
+    double currentPosition = inputs.positionRadWithoutOffset;
+    if (Math.abs(currentPosition - targetPosition) < 0.01
         && outputMode == HoodOutputMode.POSITION) {
-      atGoalPosition = true;
+      atGoalPosition = atGoalDebouncer.calculate(true);
     } else {
-      atGoalPosition = false;
+      atGoalPosition = atGoalDebouncer.calculate(false);
     }
     io.applyOutputs(outputs);
   }

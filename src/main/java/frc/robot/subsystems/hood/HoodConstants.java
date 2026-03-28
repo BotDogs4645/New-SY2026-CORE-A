@@ -9,8 +9,12 @@ public final class HoodConstants {
   public static final CANBus motorCanBus = new CANBus("CANivore");
   public static final CANBus encoderCanBus = new CANBus("CANivore");
 
-  public static final double kP = 6.5;
-  public static final double kI = 1.6;
+  // public static final LoggedTunableNumber kP = new LoggedTunableNumber("Hood/kP", 7.38);
+  // public static final LoggedTunableNumber kI = new LoggedTunableNumber("Hood/kI", 1.6);
+  public static final double kP = 11;
+  public static final double kI = 4;
+  public static final double kD = 0.1;
+  public static final double kG = 0.33;
 
   public static final double motionMagicCruiseVelocity = 14;
   public static final double motionMagicAcceleration = 9;

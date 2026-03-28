@@ -7,11 +7,12 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
-import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -34,7 +35,7 @@ public class HoodIOTalonFX implements HoodIO {
   private final StatusSignal<AngularVelocity> velocityRotPerSec = hoodMotor.getVelocity();
 
   private final MotionMagicDutyCycle motionMagicPositionCycle = new MotionMagicDutyCycle(0);
-  private final NeutralOut brakeControl = new NeutralOut();
+  private final StaticBrake brakeControl = new StaticBrake();
 
   // in rotations
   private double startingOffset = 0;
@@ -56,10 +57,13 @@ public class HoodIOTalonFX implements HoodIO {
     motorConfig.MotionMagic.MotionMagicAcceleration = HoodConstants.motionMagicAcceleration;
     motorConfig.Slot0.kP = HoodConstants.kP;
     motorConfig.Slot0.kI = HoodConstants.kI;
+    motorConfig.Slot0.kD = HoodConstants.kD;
+    motorConfig.Slot0.kG = HoodConstants.kG;
+    motorConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
     motorConfig.Feedback.FeedbackRemoteSensorID = HoodConstants.thorughboreEncoderId;
     motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
