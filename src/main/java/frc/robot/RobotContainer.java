@@ -295,8 +295,7 @@ public class RobotContainer {
         .b()
         .and(() -> !isStaticAiming())
         .whileTrue(
-            AutoAimToPass(() -> getPassTarget(drive.getPose()))
-                .onlyWhile(() -> !isStaticAiming()));
+            AutoAimToPass(() -> getPassTarget(drive.getPose())).onlyWhile(() -> !isStaticAiming()));
     operatorController.rightTrigger().whileTrue(FeedBallsToShooter());
     operatorController
         .rightBumper()
@@ -492,6 +491,7 @@ public class RobotContainer {
   }
 
   public void aimToDropBalls() {
+    isAutoAiming = true;
     turret.setGoalPositionRad(0);
     double hoodGoalPosition = (Math.PI / 2) - 1.15 - hoodOffset.getAsDouble();
     hood.setGoalPosition(hoodGoalPosition);
